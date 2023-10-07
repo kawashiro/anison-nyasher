@@ -1,0 +1,40 @@
+plugins {
+    id 'scala'
+    id 'com.github.maiflai.scalatest' version '0.32'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.scala-lang:scala-library:2.12.18'
+    testImplementation 'org.scalatest:scalatest_2.12:3.2.17'
+
+    /**
+     * Need to fix:
+     *      An exception or error caused a run to abort. This may have been caused by a problematic custom reporter.
+     *      java.lang.NoClassDefFoundError: com/vladsch/flexmark/ast/Node
+     */
+    testImplementation group: 'com.vladsch.flexmark', name: 'flexmark-all', version: '0.64.8'
+}
+
+sourceSets {
+    main {
+        scala {
+            srcDirs = ['src/main/scala']
+        }
+    }
+    test {
+        scala {
+            srcDirs = ['src/test/scala']
+        }
+    }
+}
+
+jar {
+    manifest {
+        attributes('Main-Class': "ro.kawashi.aninyasher.Application")
+    }
+}
