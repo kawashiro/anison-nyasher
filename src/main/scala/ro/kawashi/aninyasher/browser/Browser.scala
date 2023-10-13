@@ -1,11 +1,11 @@
 package ro.kawashi.aninyasher.browser
 
+import java.net.Proxy
+
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser.JsoupDocument
 import org.jsoup.Connection
 import ro.kawashi.aninyasher.browser.features.Feature
-
-import java.net.Proxy
 
 object Browser {
   private val userAgent = s"${ro.kawashi.aninyasher.name}/${ro.kawashi.aninyasher.version}"

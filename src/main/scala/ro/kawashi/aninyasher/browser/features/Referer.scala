@@ -3,18 +3,16 @@ package ro.kawashi.aninyasher.browser.features
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
 import org.jsoup.Connection
 
-class Referer(initialReferer: String = null) extends Feature {
+class Referer(initialReferer: Option[String] = None) extends Feature {
 
-  private[this] var lastDocumentUrl: String = initialReferer
+  private[this] var lastDocumentUrl: Option[String] = initialReferer
 
   override def modifyConnection(conn: Connection): Connection = {
-    if (lastDocumentUrl != null) {
-      conn.header("Referer", lastDocumentUrl)
-    }
+    lastDocumentUrl.foreach(conn.header("Referer", _))
     conn
   }
 
   override def onDocumentReceived(doc: JsoupBrowser.JsoupDocument): Unit = {
-    lastDocumentUrl = doc.location
+    lastDocumentUrl = Some(doc.location)
   }
 }
