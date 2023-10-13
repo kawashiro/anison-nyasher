@@ -32,6 +32,7 @@ class Browser(override val userAgent: String = Browser.userAgent,
 
   override def requestSettings(conn: Connection): Connection = {
     super.requestSettings(conn)
+    conn.header("Connection", "close")
 
     features.foldLeft(conn)((c, f) => f.modifyConnection(c))
   }
