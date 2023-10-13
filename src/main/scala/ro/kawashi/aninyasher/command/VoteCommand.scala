@@ -50,8 +50,9 @@ class VoteCommand extends Command with Logging {
             case e: AnisonException => logger.warn(s"Failed to vote for #${config.songId} as $login: ${e.getMessage}")
           }
         })
+      } else {
+        Thread.sleep(10000)
       }
-      Thread.sleep(10000)
 
       votingLoop(true)
     }

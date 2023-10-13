@@ -1,7 +1,7 @@
 package ro.kawashi.aninyasher.loginprovider
 
 import scala.io.Source
-import scala.util.Random
+import scala.util.{Failure, Random, Success, Try}
 
 object LegacyLoginProvider {
   private val password = "qweqwe"
@@ -17,7 +17,10 @@ class LegacyLoginProvider(filePath: String) extends LoginProvider {
   }
 
   override def next(): (String, String) = {
-    innerIterator.next()
+    Try(innerIterator.next()) match {
+      case Success(value) => value
+      case Failure(exception) => throw new RuntimeException(s"No more alive logins at $filePath", exception)
+    }
   }
 
   private def load(): Iterator[(String, String)] = {

@@ -65,7 +65,6 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
 
   private def getStatusData: ujson.Value = {
     val jsonText = browser.get(s"${Anison.anisonBaseUrl}/status.php") >> text("body")
-    println(jsonText)
     ujson.read(jsonText)
   }
 }
