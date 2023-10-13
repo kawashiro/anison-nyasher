@@ -13,7 +13,7 @@ object TorProxyProvider {
 class TorProxyProvider(torProcess: TorProcess) extends ProxyProvider {
   override def next(): Proxy = {
     torProcess.changeExitNode()
-    Thread.sleep(500)
+    Thread.sleep(3000)
     TorProxyProvider.torProxy
   }
 }
