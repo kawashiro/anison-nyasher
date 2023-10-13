@@ -1,8 +1,7 @@
 package ro.kawashi.aninyasher
 
 import scopt.OParser
-
-import ro.kawashi.aninyasher.command.{Command, OnAirCommand}
+import ro.kawashi.aninyasher.command.{Command, OnAirCommand, VoteCommand}
 
 object OptParser {
   case class Config(
@@ -10,8 +9,9 @@ object OptParser {
     command: Option[Command] = None,
     tor: String = "/usr/bin/tor",
 
-    // On-air command params
-    attribute: String = ""
+    // Vote command params
+    songId: Int = -1,
+    loginsFile: String = sys.env.getOrElse("HOME", ".") + "/.anison-logins.txt"
   )
 
   def get(): OParser[Unit, Config] = {
@@ -28,13 +28,21 @@ object OptParser {
 
       // On-air command
       cmd("onair")
-        .required()
         .action((_, c) => c.copy(command = Some(new OnAirCommand)))
+        .text("Get currently on-air song"),
+
+      // Vote command
+      cmd("vote")
+        .action((_, c) => c.copy(command = Some(new VoteCommand)))
+        .text("Vote for a song")
         .children(
-          opt[String]('a', "attribute")
-            .action((arg, c) => c.copy(attribute = arg))
+          opt[Int]('s', "song")
+            .action((arg, c) => c.copy(songId = arg))
             .required()
-            .text("command argument")
+            .text("Anison song ID"),
+          opt[String]('l', "logins")
+            .action((arg, c) => c.copy(loginsFile = arg))
+            .text("Anison logins file"),
         ),
     )
   }
