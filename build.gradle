@@ -2,6 +2,7 @@ plugins {
     id 'scala'
     id 'com.github.maiflai.scalatest' version '0.32'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'de.undercouch.download' version '5.5.0'
 }
 
 repositories {
@@ -12,10 +13,12 @@ dependencies {
     implementation 'org.scala-lang:scala-library:2.12.18'
     implementation 'net.ruippeixotog:scala-scraper_2.12:3.1.0'
     implementation 'com.lihaoyi:ujson_2.12:3.1.3'
+    implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
+    implementation 'org.apache.logging.log4j:log4j-api-scala_2.12:12.0'
     testImplementation 'org.scalatest:scalatest_2.12:3.2.17'
 
     /**
-     * Need to fix:
+     * Required to fix:
      *      An exception or error caused a run to abort. This may have been caused by a problematic custom reporter.
      *      java.lang.NoClassDefFoundError: com/vladsch/flexmark/ast/Node
      */
@@ -37,6 +40,37 @@ sourceSets {
 
 jar {
     manifest {
-        attributes('Main-Class': "ro.kawashi.aninyasher.Application")
+        attributes(
+            'Main-Class': "ro.kawashi.aninyasher.Application",
+            'Implementation-Title': 'Anison Nyasher',
+            'Implementation-Version': project.version
+        )
     }
+}
+
+task downloadTorSrc(type: Download) {
+    src "https://www.torproject.org/dist/tor-${project.findProperty('tor.version')}.tar.gz"
+    dest layout.buildDirectory.dir('tor')
+    overwrite false
+}
+
+task unarchiveTorSrc(type: Copy) {
+    dependsOn downloadTorSrc
+    from tarTree(resources.gzip("${downloadTorSrc.dest}/tor-${project.findProperty('tor.version')}.tar.gz"))
+    into downloadTorSrc.dest
+}
+
+task buildTor(type: Exec) {
+    dependsOn unarchiveTorSrc
+    workingDir "${downloadTorSrc.dest}/tor-${project.findProperty('tor.version')}"
+    commandLine 'sh', '-c',
+        './configure' +
+        ' --prefix "$PWD/../dist"' +
+        ' --enable-static-tor ' +
+        ' --with-libevent-dir=/usr/lib/x86_64-linux-gnu' +
+        ' --with-openssl-dir=/usr/lib/x86_64-linux-gnu' +
+        ' --with-zlib-dir=/usr/lib/x86_64-linux-gnu' +
+        ' --disable-asciidoc' +
+        ' && make' +
+        ' && make install-strip'
 }
