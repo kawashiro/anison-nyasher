@@ -32,7 +32,7 @@ class VoteCommand extends Command with Logging {
 
       logger.info(s"$votesToDo votes to be done")
       if (votesToDo > 0) {
-        (1 to votesToDo).foreach({_ =>
+        (1 to votesToDo).foreach({iteration =>
           val (login, password) = loginProvider.next()
           try {
             val userAgent = userAgentList.next()
@@ -43,7 +43,7 @@ class VoteCommand extends Command with Logging {
 
             val browser = Anison(userAgent, proxy)
             browser.login(login, password)
-            browser.vote(config.songId)
+            browser.vote(config.songId, if (iteration == 1) config.comment else "")
             logger.info("Voted successfully!")
 
           } catch {

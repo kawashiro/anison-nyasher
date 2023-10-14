@@ -11,7 +11,8 @@ object OptParser {
 
     // Vote command params
     songId: Int = -1,
-    loginsFile: String = sys.env.getOrElse("HOME", ".") + "/.anison-logins.txt"
+    loginsFile: String = sys.env.getOrElse("HOME", ".") + "/.anison-logins.txt",
+    comment: String = ""
   )
 
   def get(): OParser[Unit, Config] = {
@@ -43,6 +44,9 @@ object OptParser {
           opt[String]('l', "logins")
             .action((arg, c) => c.copy(loginsFile = arg))
             .text("Anison logins file"),
+          opt[String]('c', "comment")
+            .action((arg, c) => c.copy(comment = arg))
+            .text("Anison comment for the vote"),
         ),
     )
   }

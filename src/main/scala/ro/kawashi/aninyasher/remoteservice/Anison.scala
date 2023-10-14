@@ -52,12 +52,12 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
     error.foreach(err => throw new AnisonException(s"Failed to log in anison.fm as $login: $err"))
   }
 
-  def vote(songId: Int): Unit = {
+  def vote(songId: Int, comment: String = ""): Unit = {
     val error = browser.post(s"${Anison.anisonBaseUrl}/song_actions.php", Map(
       "action" -> "up",
       "song" -> songId.toString,
       "premium" -> "0",
-      "comment" -> ""
+      "comment" -> comment,
     )) >?> text("div.error")
 
     error.foreach(err => throw new AnisonException(s"Unable to vote for the song #$songId: $err"))
