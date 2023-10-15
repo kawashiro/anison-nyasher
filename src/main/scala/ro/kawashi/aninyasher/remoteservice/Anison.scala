@@ -42,6 +42,18 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
     SongStatus(votesOrZero(jsonData, _ == songId), votesOrZero(jsonData, _ != songId))
   }
 
+  def getVoters: Set[Int] = {
+    val jsonData = getStatusData
+    jsonData("orders_list").arr.map(el => el("userid").str.toInt).toSet
+  }
+
+  def getUserLogin(userId: Int): String = {
+    val fullName = browser.get(s"${Anison.anisonBaseUrl}/user/$userId") >> text("div.userdata > h2")
+    val nameParts = fullName.split(" ")
+    val login = nameParts(if (nameParts.length == 1) 0 else 1)
+    login.slice(1, login.length - 1)
+  }
+
   def login(login: String, password: String): Unit = {
     val error = browser.post(s"${Anison.anisonBaseUrl}/user/login", Map(
       "login" -> login,
