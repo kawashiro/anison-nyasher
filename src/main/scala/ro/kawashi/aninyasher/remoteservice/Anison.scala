@@ -2,17 +2,13 @@ package ro.kawashi.aninyasher.remoteservice
 
 import java.net.Proxy
 
-import scala.annotation.tailrec
-
-import scala.util.{Failure, Random, Success, Try}
 import net.ruippeixotog.scalascraper.dsl.DSL._
 import net.ruippeixotog.scalascraper.scraper.ContentExtractors.text
 import org.apache.logging.log4j.scala.Logging
 
 import ro.kawashi.aninyasher.browser.Browser
 import ro.kawashi.aninyasher.browser.features.Referer
-
-class AnisonException(message: String) extends RuntimeException(message)
+import ro.kawashi.aninyasher.remoteservice.anison.AnisonException
 
 object Anison {
   private val anisonBaseUrl = "https://anison.fm"
@@ -31,8 +27,6 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
 
   case class SongStatus(votes: Int, topSongVotes: Int)
 
-  private val random = new Random()
-
   def getCurrentlyOnAir: SongInfo = {
     val jsonData = getStatusData
     SongInfo(jsonData("on_air")("anime").str, jsonData("on_air")("track").str)
@@ -48,33 +42,16 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
     SongStatus(votesOrZero(jsonData, _ == songId), votesOrZero(jsonData, _ != songId))
   }
 
-  private def getVoters: Set[Int] = {
+  def getVoters: Set[Int] = {
     val jsonData = getStatusData
     jsonData("orders_list").arr.map(el => el("userid").str.toInt).toSet
   }
 
-  private def getUserLogin(userId: Int): String = {
+  def getUserLogin(userId: Int): String = {
     val fullName = browser.get(s"${Anison.anisonBaseUrl}/user/$userId") >> text("div.userdata > h2")
     val nameParts = fullName.split(" ")
     val login = nameParts(if (nameParts.length == 1) 0 else 1)
     login.slice(1, login.length - 1)
-  }
-
-  def getRandomLogin: String = {
-    val maxId = getVoters.max
-
-    @tailrec
-    def selectLoop(): String = {
-      val id = random.nextInt(maxId)
-      Try(getUserLogin(id)) match {
-        case Success(value) => value
-        case Failure(exception) =>
-          logger.debug(s"Failed to get user data with id $id: ${exception.getMessage}")
-          selectLoop()
-      }
-    }
-
-    selectLoop()
   }
 
   def login(login: String, password: String): Unit = {

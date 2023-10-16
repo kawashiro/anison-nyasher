@@ -25,7 +25,7 @@ public class PosixTorProcess implements TorProcess {
     }
 
     @Override
-    public void start() throws TorException {
+    public TorProcess start() throws TorException {
         try {
             torProcess = torProcessBuilder.start();
             torStdout = new BufferedReader(new InputStreamReader(torProcess.getInputStream()));
@@ -36,6 +36,8 @@ public class PosixTorProcess implements TorProcess {
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
+
+        return this;
     }
 
     @Override
@@ -46,7 +48,7 @@ public class PosixTorProcess implements TorProcess {
     }
 
     @Override
-    public void changeExitNode() throws TorException {
+    public TorProcess changeExitNode() throws TorException {
         try {
             Runtime.getRuntime().exec("kill -HUP " + torProcess.pid());
             awaitUntilMessage("Received reload signal");
@@ -55,6 +57,8 @@ public class PosixTorProcess implements TorProcess {
         } catch (IOException e) {
             throw new TorException(e.getMessage(), e);
         }
+
+        return this;
     }
 
     @Override

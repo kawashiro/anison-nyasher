@@ -16,9 +16,13 @@ object Application extends Logging {
         if (config.command.isEmpty) {
           println(OParser.usage(optParser))
         } else {
-          logger.info(s"Greeting to Anison from Aninson Nyasher v. ${ro.kawashi.aninyasher.version}")
+          logger.info(s"Greeting to Anison from Aninson Nyasher v.${ro.kawashi.aninyasher.version}")
           Try(config.command.get.run(config)) match {
-            case Failure(exception) => logger.error(exception.getMessage)
+            case Failure(exception) =>
+              logger.error(exception.getMessage)
+              if (config.debug) {
+                throw exception
+              }
             case Success(_) => ()
           }
         }

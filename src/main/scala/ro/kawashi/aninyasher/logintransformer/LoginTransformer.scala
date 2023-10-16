@@ -4,6 +4,10 @@ import scala.util.Random
 
 import ro.kawashi.aninyasher.logintransformer.strategy.Strategy
 
+object LoginTransformer {
+  def apply(): LoginTransformer = new LoginTransformer()
+}
+
 class LoginTransformer(private val strategies: List[Strategy] = Nil) {
 
   def addStrategy(strategy: Strategy): LoginTransformer = {

@@ -8,6 +8,7 @@ object OptParser {
     // Global options
     command: Option[Command] = None,
     tor: String = "/usr/bin/tor",
+    debug: Boolean = false,
 
     // Vote command params
     songId: Int = -1,
@@ -26,6 +27,9 @@ object OptParser {
       opt[String]('t', "tor")
         .action((arg, c) => c.copy(tor = arg))
         .text("path to tor executable"),
+      opt[Boolean]('d', "debug")
+        .action((arg, c) => c.copy(debug = arg))
+        .text("print error backtraces"),
 
       // On-air command
       cmd("onair")

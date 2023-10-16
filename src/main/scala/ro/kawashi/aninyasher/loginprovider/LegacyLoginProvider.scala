@@ -1,5 +1,7 @@
 package ro.kawashi.aninyasher.loginprovider
 
+import java.io.File
+
 import scala.io.Source
 import scala.util.{Failure, Random, Success, Try}
 
@@ -24,6 +26,11 @@ class LegacyLoginProvider(filePath: String) extends LoginProvider {
   }
 
   private def load(): Iterator[(String, String)] = {
+    val fileExists = new File(filePath).exists()
+    if (!fileExists) {
+      return Iterator.empty
+    }
+
     val source = Source.fromFile(filePath)
     try {
       Random.shuffle(source.getLines().map { username =>
