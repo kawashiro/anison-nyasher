@@ -2,9 +2,6 @@ package ro.kawashi.aninyasher.remoteservice
 
 import java.net.Proxy
 
-import net.ruippeixotog.scalascraper.dsl.DSL._
-import net.ruippeixotog.scalascraper.scraper.ContentExtractors.text
-
 import ro.kawashi.aninyasher.browser.Browser
 import ro.kawashi.aninyasher.browser.features.AcceptAny
 
@@ -20,8 +17,7 @@ class IPChecker(override protected val browser: Browser) extends RemoteService(b
 
   case class IPData(country: String, ip: String)
   def getIPInfo: IPData = {
-    val responseText = browser.get(IPChecker.checkerUrl) >> text("body")
-    val ipData = ujson.read(responseText)
+    val ipData = browser.getJson(IPChecker.checkerUrl)
 
     IPData(ipData("country").str, ipData("query").str)
   }

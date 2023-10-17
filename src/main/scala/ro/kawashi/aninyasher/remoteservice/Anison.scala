@@ -3,7 +3,7 @@ package ro.kawashi.aninyasher.remoteservice
 import java.net.Proxy
 
 import net.ruippeixotog.scalascraper.dsl.DSL._
-import net.ruippeixotog.scalascraper.scraper.ContentExtractors.text
+import net.ruippeixotog.scalascraper.scraper.ContentExtractors.{attr, text}
 import org.apache.logging.log4j.scala.Logging
 
 import ro.kawashi.aninyasher.browser.Browser
@@ -26,6 +26,8 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
   case class SongInfo(anime: String, title: String)
 
   case class SongStatus(votes: Int, topSongVotes: Int)
+
+  case class CaptchaChallenge(url: String, key: String)
 
   def getCurrentlyOnAir: SongInfo = {
     val jsonData = getStatusData
@@ -64,6 +66,16 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
     error.foreach(err => throw new AnisonException(s"Failed to log in anison.fm as $login: $err"))
   }
 
+  def getRegistrationCaptchaChallenge: CaptchaChallenge = {
+    val registrationUrl = s"${Anison.anisonBaseUrl}/user/join"
+    val challenge = browser.get(registrationUrl) >> attr("data-sitekey")("div.g-recaptcha")
+    if (challenge.isEmpty) {
+      throw new AnisonException("Unable to get registration captcha challenge")
+    }
+
+    CaptchaChallenge(registrationUrl, challenge)
+  }
+
   def vote(songId: Int, comment: String = ""): Unit = {
     val error = browser.post(s"${Anison.anisonBaseUrl}/song_actions.php", Map(
       "action" -> "up",
@@ -76,7 +88,6 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
   }
 
   private def getStatusData: ujson.Value = {
-    val jsonText = browser.get(s"${Anison.anisonBaseUrl}/status.php") >> text("body")
-    ujson.read(jsonText)
+    browser.getJson(s"${Anison.anisonBaseUrl}/status.php")
   }
 }

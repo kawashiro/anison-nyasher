@@ -11,7 +11,7 @@ import ro.kawashi.aninyasher.remoteservice.anison.SessionManager
 class VoteCommand extends Command with Logging {
 
   override def run(config: Config): Unit = {
-    val session = SessionManager(config.tor, config.loginsFile)
+    val session = SessionManager(config.tor, config.loginsFile, config.antiCaptchaKey)
 
     @tailrec
     def votingLoop(wasOnTop: Boolean = false): Unit = {

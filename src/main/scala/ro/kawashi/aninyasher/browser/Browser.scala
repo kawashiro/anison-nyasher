@@ -1,10 +1,12 @@
 package ro.kawashi.aninyasher.browser
 
 import java.net.Proxy
-
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser.JsoupDocument
-import org.jsoup.Connection
+import net.ruippeixotog.scalascraper.dsl.DSL._
+import net.ruippeixotog.scalascraper.scraper.ContentExtractors.text
+import org.jsoup.{Connection, Jsoup}
+import org.jsoup.Connection.Method.POST
 import ro.kawashi.aninyasher.browser.features.Feature
 
 object Browser {
@@ -21,6 +23,22 @@ class Browser(override val userAgent: String = Browser.userAgent,
 
   def applyFeature(feature: Feature): Browser = {
     new Browser(userAgent, proxy, feature :: features)
+  }
+
+  def getJson(url: String): ujson.Value = {
+    val jsonText = get(url) >> text("body")
+    ujson.read(jsonText)
+  }
+
+  def postJson(url: String, data: ujson.Value): ujson.Value = {
+    val jsonText = data.render()
+    val pipeline = (conn => defaultRequestSettings(conn))
+      .andThen(requestSettings)
+      .andThen(executeRequest)
+      .andThen(processResponse)
+
+    val responseText = pipeline(Jsoup.connect(url).method(POST).proxy(proxy).requestBody(jsonText)) >> text("body")
+    ujson.read(responseText)
   }
 
   override protected[this] def processResponse(res: Connection.Response): JsoupDocument = {

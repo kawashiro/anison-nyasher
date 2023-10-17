@@ -1,6 +1,10 @@
 package ro.kawashi.aninyasher.remoteservice.anison
 
+import scala.annotation.tailrec
+import scala.util.{Failure, Random, Success, Try}
+
 import org.apache.logging.log4j.scala.Logging
+import ro.kawashi.aninyasher.captcha.{AntiCaptcha, CaptchaSolver}
 import ro.kawashi.aninyasher.loginprovider.{LegacyLoginProvider, LoginProvider}
 import ro.kawashi.aninyasher.logintransformer.LoginTransformer
 import ro.kawashi.aninyasher.logintransformer.strategy._
@@ -10,11 +14,8 @@ import ro.kawashi.aninyasher.tor.PosixTorProcess
 import ro.kawashi.aninyasher.useragent.{BuiltInUserAgentList, UserAgentList}
 import ro.kawashi.aninyasher.util.PasswordGenerator
 
-import scala.annotation.tailrec
-import scala.util.{Failure, Random, Success, Try}
-
 object SessionManager {
-  def apply(torBinary: String, loginsFilePath: String): SessionManager = {
+  def apply(torBinary: String, loginsFilePath: String, antiCaptchaKey: String): SessionManager = {
     new SessionManager(
       BuiltInUserAgentList(),
       TorProxyProvider(new PosixTorProcess(torBinary).start()),
@@ -22,7 +23,8 @@ object SessionManager {
       LoginTransformer()
         .addStrategy(new ExtraSyllableStrategy)
         .addStrategy(new ExtraVowelStrategy)
-        .addStrategy(new NumberAddStrategy)
+        .addStrategy(new NumberAddStrategy),
+      AntiCaptcha(antiCaptchaKey)
     )
   }
 }
@@ -31,7 +33,8 @@ object SessionManager {
 class SessionManager(userAgentList: UserAgentList,
                      proxyProvider: ProxyProvider,
                      loginProvider: LoginProvider,
-                     loginTransformer: LoginTransformer) extends Logging {
+                     loginTransformer: LoginTransformer,
+                     captchaSolver: CaptchaSolver) extends Logging {
 
   private val random = new Random()
 
@@ -55,6 +58,10 @@ class SessionManager(userAgentList: UserAgentList,
       val password = PasswordGenerator.generate()
 
       logger.debug(s"Registering as $login :: $password")
+      val captchaChallenge = session.getRegistrationCaptchaChallenge
+      val captchaResult = captchaSolver.solve(captchaChallenge.url, captchaChallenge.key)
+      logger.debug(s"Solved captcha: $captchaResult")
+
       throw new NotImplementedError("Registration is not implemented yet")
     }
   }

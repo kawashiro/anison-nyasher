@@ -9,6 +9,7 @@ object OptParser {
     command: Option[Command] = None,
     tor: String = "/usr/bin/tor",
     debug: Boolean = false,
+    antiCaptchaKey: String = sys.env.getOrElse("ANTI_CAPTCHA_KEY", ""),
 
     // Vote command params
     songId: Int = -1,
@@ -30,6 +31,9 @@ object OptParser {
       opt[Boolean]('d', "debug")
         .action((arg, c) => c.copy(debug = arg))
         .text("print error backtraces"),
+      opt[String]('a', "anti-captcha-key")
+        .action((arg, c) => c.copy(antiCaptchaKey = arg))
+        .text("anti-captcha.com API key"),
 
       // On-air command
       cmd("onair")
