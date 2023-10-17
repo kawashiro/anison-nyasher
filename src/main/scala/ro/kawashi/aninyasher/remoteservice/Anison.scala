@@ -87,6 +87,27 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
     error.foreach(err => throw new AnisonException(s"Unable to vote for the song #$songId: $err"))
   }
 
+  def register(login: String, password: String, email: String, captcha: String): Unit = {
+    val response = browser.post(s"${Anison.anisonBaseUrl}/user/join", Map(
+      "login" -> login,
+      "password" -> password,
+      "email" -> email,
+      "g-recaptcha-response" -> captcha,
+      "authform" -> "Регистрация"
+    ))
+
+    if ((response >?> text("div.restore_success")).isEmpty) {
+      throw new AnisonException("Unable to register a new account")
+    }
+  }
+
+  def confirmEmail(token: String): Unit = {
+    val success = browser.get(s"${Anison.anisonBaseUrl}/user/join-confirm?token=$token") >> text("div.restore_success")
+    if (success.isEmpty) {
+      throw new AnisonException(s"Something went wrong confirming e-mail (token: $token)")
+    }
+  }
+
   private def getStatusData: ujson.Value = {
     browser.getJson(s"${Anison.anisonBaseUrl}/status.php")
   }

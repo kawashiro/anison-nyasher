@@ -5,6 +5,7 @@ import scala.util.{Failure, Random, Success, Try}
 
 import org.apache.logging.log4j.scala.Logging
 import ro.kawashi.aninyasher.captcha.{AntiCaptcha, CaptchaSolver}
+import ro.kawashi.aninyasher.email.{TemporaryInbox, TenMinuteMailNet}
 import ro.kawashi.aninyasher.loginprovider.{LegacyLoginProvider, LoginProvider}
 import ro.kawashi.aninyasher.logintransformer.LoginTransformer
 import ro.kawashi.aninyasher.logintransformer.strategy._
@@ -24,7 +25,8 @@ object SessionManager {
         .addStrategy(new ExtraSyllableStrategy)
         .addStrategy(new ExtraVowelStrategy)
         .addStrategy(new NumberAddStrategy),
-      AntiCaptcha(antiCaptchaKey)
+      AntiCaptcha(antiCaptchaKey),
+      TenMinuteMailNet(),
     )
   }
 }
@@ -34,7 +36,8 @@ class SessionManager(userAgentList: UserAgentList,
                      proxyProvider: ProxyProvider,
                      loginProvider: LoginProvider,
                      loginTransformer: LoginTransformer,
-                     captchaSolver: CaptchaSolver) extends Logging {
+                     captchaSolver: CaptchaSolver,
+                     temporaryInbox: TemporaryInbox) extends Logging {
 
   private val random = new Random()
 
@@ -56,13 +59,29 @@ class SessionManager(userAgentList: UserAgentList,
       logger.warn(s"No more logins available, proceeding with registration")
       val login = loginTransformer.transform(getRegistrationSeedLogin(session))
       val password = PasswordGenerator.generate()
+      val email = temporaryInbox.create()
 
-      logger.debug(s"Registering as $login :: $password")
+      logger.info(s"Registering as $login ($email) with password $password")
+
       val captchaChallenge = session.getRegistrationCaptchaChallenge
       val captchaResult = captchaSolver.solve(captchaChallenge.url, captchaChallenge.key)
       logger.debug(s"Solved captcha: $captchaResult")
 
-      throw new NotImplementedError("Registration is not implemented yet")
+      session.register(login, password, email, captchaResult)
+
+      val token = temporaryInbox.onNewMail(email => {
+        "попробуйте ввести код \\(([0-9a-z]+)\\) вручную".r.findFirstMatchIn(email.body) match {
+          case Some(token) =>
+            logger.debug(s"Got email token: ${token.group(1)}")
+            Some(token.group(1))
+          case None => None
+        }
+      })
+
+      session.confirmEmail(token)
+
+      session.login(login, password)
+      fn(session)
     }
   }
 
