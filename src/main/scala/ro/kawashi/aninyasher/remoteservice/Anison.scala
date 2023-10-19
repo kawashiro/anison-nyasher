@@ -3,7 +3,7 @@ package ro.kawashi.aninyasher.remoteservice
 import java.net.Proxy
 
 import net.ruippeixotog.scalascraper.dsl.DSL._
-import net.ruippeixotog.scalascraper.scraper.ContentExtractors.{attr, text}
+import net.ruippeixotog.scalascraper.scraper.ContentExtractors.{attr, text, texts}
 import org.apache.logging.log4j.scala.Logging
 
 import ro.kawashi.aninyasher.browser.Browser
@@ -97,7 +97,8 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
     ))
 
     if ((response >?> text("div.restore_success")).isEmpty) {
-      throw new AnisonException("Unable to register a new account")
+      val errors = response >> texts("span.help-inline span")
+      throw new AnisonException("Unable to register a new account: " + errors.mkString(", "))
     }
   }
 

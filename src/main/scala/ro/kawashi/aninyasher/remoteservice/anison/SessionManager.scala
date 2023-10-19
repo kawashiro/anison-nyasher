@@ -65,7 +65,6 @@ class SessionManager(userAgentList: UserAgentList,
 
       val captchaChallenge = session.getRegistrationCaptchaChallenge
       val captchaResult = captchaSolver.solve(captchaChallenge.url, captchaChallenge.key)
-      logger.debug(s"Solved captcha: $captchaResult")
 
       session.register(login, password, email, captchaResult)
 

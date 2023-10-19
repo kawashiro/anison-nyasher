@@ -44,7 +44,7 @@ class AntiCaptcha(override protected val browser: Browser, clientKey: String)
 
   @tailrec
   private def getTaskResult(taskId: Int): String = {
-    val taskResult = browser.postJson(
+    val taskResult = request(
       AntiCaptcha.captchaResultUrl,
       ujson.Obj("clientKey" -> clientKey, "taskId" -> taskId)
     )
