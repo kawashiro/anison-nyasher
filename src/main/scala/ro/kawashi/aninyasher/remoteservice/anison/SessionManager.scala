@@ -68,8 +68,9 @@ class SessionManager(userAgentList: UserAgentList,
 
       session.register(login, password, email, captchaResult)
 
+      logger.info(s"Registered successfully! Confirming a email then...")
       val token = temporaryInbox.onNewMail(email => {
-        "попробуйте ввести код \\(([0-9a-z]+)\\) вручную".r.findFirstMatchIn(email.body) match {
+        "\\(([0-9a-zA-Z]+)\\)".r.findFirstMatchIn(email.body) match {
           case Some(token) =>
             logger.debug(s"Got email token: ${token.group(1)}")
             Some(token.group(1))
@@ -80,6 +81,8 @@ class SessionManager(userAgentList: UserAgentList,
       session.confirmEmail(token)
 
       session.login(login, password)
+      loginProvider += (login, password)
+
       fn(session)
     }
   }

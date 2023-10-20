@@ -88,6 +88,8 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
   }
 
   def register(login: String, password: String, email: String, captcha: String): Unit = {
+    browser.get(s"${Anison.anisonBaseUrl}/suggestion.php?login=$login")
+
     val response = browser.post(s"${Anison.anisonBaseUrl}/user/join", Map(
       "login" -> login,
       "password" -> password,
