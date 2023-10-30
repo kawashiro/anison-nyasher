@@ -1,0 +1,12 @@
+Package: anison-nyasher
+Version: ${version}
+Architecture: ${arch}
+Maintainer: Kawashiro Nitori <nitori@kawashi.ro>
+Installed-Size: ${size}
+Depends: openjdk-11-jre, libc6
+Priority: optional
+Section: java
+Homepage: https://github.com/kawashiro/anison-nyasher
+Description: Your best experience of using anison.fm!
+ Anison.FM is a Japanese anime song radio station.
+ This is an utility that makes you create your own playlist and even more!

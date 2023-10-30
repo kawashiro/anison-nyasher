@@ -1,0 +1,26 @@
+task downloadTorSrc(type: Download) {
+    src "https://www.torproject.org/dist/tor-${project.findProperty('tor.version')}.tar.gz"
+    dest layout.buildDirectory.dir('tor')
+    overwrite false
+}
+
+task unarchiveTorSrc(type: Copy) {
+    dependsOn downloadTorSrc
+    from tarTree(resources.gzip("${downloadTorSrc.dest}/tor-${project.findProperty('tor.version')}.tar.gz"))
+    into downloadTorSrc.dest
+}
+
+task buildTor(type: Exec) {
+    dependsOn unarchiveTorSrc
+    workingDir "${downloadTorSrc.dest}/tor-${project.findProperty('tor.version')}"
+    commandLine 'sh', '-c',
+        './configure' +
+        ' --prefix "$PWD/../dist"' +
+        ' --enable-static-tor ' +
+        ' --with-libevent-dir=/usr/lib/x86_64-linux-gnu' +
+        ' --with-openssl-dir=/usr/lib/x86_64-linux-gnu' +
+        ' --with-zlib-dir=/usr/lib/x86_64-linux-gnu' +
+        ' --disable-asciidoc' +
+        ' && make' +
+        ' && make install-strip'
+}

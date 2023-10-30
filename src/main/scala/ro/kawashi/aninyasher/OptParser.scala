@@ -7,7 +7,7 @@ object OptParser {
   case class Config(
     // Global options
     command: Option[Command] = None,
-    tor: String = "/usr/bin/tor",
+    tor: String = "/usr/lib/anison-nyasher/libexec/tor",
     debug: Boolean = false,
     antiCaptchaKey: String = sys.env.getOrElse("ANTI_CAPTCHA_KEY", ""),
 

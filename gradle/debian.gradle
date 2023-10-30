@@ -1,0 +1,62 @@
+task buildDeb {
+    dependsOn buildTor
+    dependsOn shadowJar
+
+    def arch = System.getProperty("os.arch").toLowerCase(Locale.ENGLISH)
+    def version = project.property("version")
+    def buildDir = layout.buildDirectory.get()
+
+    doLast {
+        // Create build directories hierarchy
+        mkdir("$buildDir/pkg")
+        mkdir("$buildDir/deb/usr/bin")
+        mkdir("$buildDir/deb/usr/share/java")
+        mkdir("$buildDir/deb/usr/share/doc/anison-nyasher")
+        mkdir("$buildDir/deb/usr/lib/anison-nyasher/libexec")
+        mkdir("$buildDir/deb/DEBIAN")
+
+        // Install files
+        exec {
+            commandLine 'install', '-m', '755',
+                "$buildDir/tor/dist/bin/tor",
+                "$buildDir/deb/usr/lib/anison-nyasher/libexec/tor"
+        }
+        exec {
+            commandLine 'install', '-m', '755',
+                "bin/anison-nyasher.sh",
+                "$buildDir/deb/usr/bin/anison-nyasher"
+        }
+        copy {
+            from "$buildDir/libs/anison-nyasher-$version-all.jar"
+            into "$buildDir/deb/usr/share/java"
+            rename "anison-nyasher-$version-all.jar", 'anison-nyasher.jar'
+        }
+
+        // Debian metadata
+        def stdout = new ByteArrayOutputStream()
+        exec{
+            commandLine 'sh', '-c', "du -d0 \"$buildDir/deb/usr\" | sed -e 's/\\s\\+.*\$//'"
+            standardOutput = stdout;
+        }
+        def size = stdout.toString() as Integer
+
+        copy {
+            from "pkg/debian/control.skel"
+            into "$buildDir/deb/DEBIAN"
+            expand([version: version, arch: arch, size: size])
+            rename 'control.skel', 'control'
+        }
+        exec {
+            commandLine 'sh', '-c',
+                "cd \"$buildDir/deb\"" +
+                " && find usr/ -type f -exec md5sum {} \\; > \"$buildDir/deb/DEBIAN/md5sums\""
+        }
+
+        // Build package
+        exec {
+            workingDir layout.buildDirectory.dir('deb')
+            commandLine 'fakeroot', 'dpkg-deb', '--build', '.',
+                "$buildDir/pkg/anison-nyasher_$version-${arch}.deb"
+        }
+    }
+}
