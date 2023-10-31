@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 import scala.util.{Failure, Random, Success, Try}
 
 import org.apache.logging.log4j.scala.Logging
+
 import ro.kawashi.aninyasher.captcha.{AntiCaptcha, CaptchaSolver}
 import ro.kawashi.aninyasher.email.{TemporaryInbox, TenMinuteMailNet}
 import ro.kawashi.aninyasher.loginprovider.{LegacyLoginProvider, LoginProvider}
@@ -15,7 +16,19 @@ import ro.kawashi.aninyasher.tor.PosixTorProcess
 import ro.kawashi.aninyasher.useragent.{BuiltInUserAgentList, UserAgentList}
 import ro.kawashi.aninyasher.util.PasswordGenerator
 
+/**
+ * Companion object for SessionManager.
+ */
 object SessionManager {
+
+  /**
+   * Create a new session manager.
+   *
+   * @param torBinary String
+   * @param loginsFilePath String
+   * @param antiCaptchaKey String
+   * @return SessionManager
+   */
   def apply(torBinary: String, loginsFilePath: String, antiCaptchaKey: String): SessionManager = {
     new SessionManager(
       BuiltInUserAgentList(),
@@ -31,7 +44,16 @@ object SessionManager {
   }
 }
 
-
+/**
+ * Class that prepares a session on anison service and invokes a task provided.
+ *
+ * @param userAgentList UserAgentList
+ * @param proxyProvider ProxyProvider
+ * @param loginProvider LoginProvider
+ * @param loginTransformer LoginTransformer
+ * @param captchaSolver CaptchaSolver
+ * @param temporaryInbox TemporaryInbox
+ */
 class SessionManager(userAgentList: UserAgentList,
                      proxyProvider: ProxyProvider,
                      loginProvider: LoginProvider,
@@ -41,10 +63,24 @@ class SessionManager(userAgentList: UserAgentList,
 
   private val random = new Random()
 
+  /**
+   * Do a task anonymously.
+   *
+   * @param fn Anison => T
+   * @tparam T Type of the result
+   * @return T
+   */
   def doAnonymously[T](fn: Anison => T): T = {
     fn(Anison(userAgentList.next()))
   }
 
+  /**
+   * Do a task authorized. Create a new account if needed.
+   *
+   * @param fn Anison => T
+   * @tparam T Type of the result
+   * @return T
+   */
   def doAuthorized[T](fn: Anison => T): T = {
     val userAgent = userAgentList.next()
     val session = Anison(userAgent, proxyProvider.next())
@@ -56,7 +92,7 @@ class SessionManager(userAgentList: UserAgentList,
       fn(session)
 
     } else {
-      logger.warn(s"No more logins available, proceeding with registration")
+      logger.warn("No more logins available, proceeding with registration")
       val login = loginTransformer.transform(getRegistrationSeedLogin(session))
       val password = PasswordGenerator.generate()
       val email = temporaryInbox.create()
@@ -68,7 +104,7 @@ class SessionManager(userAgentList: UserAgentList,
 
       session.register(login, password, email, captchaResult)
 
-      logger.info(s"Registered successfully! Confirming a email then...")
+      logger.info("Registered successfully! Confirming a email then...")
       val token = temporaryInbox.onNewMail(email => {
         "\\(([0-9a-zA-Z]+)\\)".r.findFirstMatchIn(email.body) match {
           case Some(token) =>

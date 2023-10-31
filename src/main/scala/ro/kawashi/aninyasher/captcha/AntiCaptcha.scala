@@ -1,29 +1,56 @@
 package ro.kawashi.aninyasher.captcha
 
+import scala.annotation.tailrec
+
 import org.apache.logging.log4j.scala.Logging
 
 import ro.kawashi.aninyasher.browser.Browser
 import ro.kawashi.aninyasher.browser.features.AcceptAny
 import ro.kawashi.aninyasher.remoteservice.RemoteService
 
-import scala.annotation.tailrec
-
+/**
+ * Exception on inability to resolve captcha.
+ *
+ * @param message String
+ */
 class AntiCaptchaException(message: String) extends RuntimeException(message)
 
-
+/**
+ * A companion object for the AntiCaptcha class.
+ */
 object AntiCaptcha {
 
   private val captchaSubmitUrl = "https://api.anti-captcha.com/createTask"
   private val captchaResultUrl = "https://api.anti-captcha.com/getTaskResult"
+  private val pollingInterval = 10000
 
+  /**
+   * Create a new AntiCaptcha instance.
+   *
+   * @param clientKey String
+   * @return AntiCaptcha
+   */
   def apply(clientKey: String): AntiCaptcha = {
     new AntiCaptcha(Browser().applyFeature(new AcceptAny), clientKey)
   }
 }
 
+/**
+ * A captcha solver using the anti-captcha.com service.
+ *
+ * @param browser Browser
+ * @param clientKey String
+ */
 class AntiCaptcha(override protected val browser: Browser, clientKey: String)
   extends RemoteService(browser) with CaptchaSolver with Logging {
 
+  /**
+   * Solve a captcha.
+   *
+   * @param url String
+   * @param key String
+   * @return String
+   */
   override def solve(url: String, key: String): String = {
     getTaskResult(submitTask(url, key))
   }
@@ -52,7 +79,7 @@ class AntiCaptcha(override protected val browser: Browser, clientKey: String)
     taskResult("status").str match {
       case "processing" =>
         logger.debug(s"Waiting for captcha task $taskId to be solved...")
-        Thread.sleep(10000)
+        Thread.sleep(AntiCaptcha.pollingInterval)
         getTaskResult(taskId)
 
       case "ready" =>
@@ -60,7 +87,7 @@ class AntiCaptcha(override protected val browser: Browser, clientKey: String)
         logger.debug(s"Captcha task $taskId solution is $solution")
         solution
 
-      case status => throw new AntiCaptchaException(s"Invalid captcha status: $status")
+      case status: String => throw new AntiCaptchaException(s"Invalid captcha status: $status")
     }
   }
 

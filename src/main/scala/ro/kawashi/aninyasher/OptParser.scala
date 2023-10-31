@@ -1,9 +1,25 @@
 package ro.kawashi.aninyasher
 
 import scopt.OParser
+
 import ro.kawashi.aninyasher.command.{Command, OnAirCommand, VoteCommand}
 
+/**
+ * CLI options parser impl.
+ */
 object OptParser {
+
+  /**
+   * Command config.
+   *
+   * @param command Command
+   * @param tor String
+   * @param debug Boolean
+   * @param antiCaptchaKey String
+   * @param songId Int
+   * @param loginsFile String
+   * @param comment String
+   */
   case class Config(
     // Global options
     command: Option[Command] = None,
@@ -17,9 +33,16 @@ object OptParser {
     comment: String = ""
   )
 
+  /**
+   * Configure and get options parser
+   *
+   * @return OParser[Unit, Config]
+   */
   def get(): OParser[Unit, Config] = {
     val builder = OParser.builder[Config]
+    // scalastyle:off import.grouping
     import builder._
+    // scalastyle:on import.grouping
 
     OParser.sequence(
       programName(ro.kawashi.aninyasher.name),

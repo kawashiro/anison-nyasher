@@ -8,8 +8,20 @@ import ro.kawashi.aninyasher.OptParser.Config
 import ro.kawashi.aninyasher.remoteservice.anison.AnisonException
 import ro.kawashi.aninyasher.remoteservice.anison.SessionManager
 
+/**
+ * Implementation of simple voting by song ID
+ *
+ * @constructor create a new vote command
+ */
 class VoteCommand extends Command with Logging {
 
+  private val pollingInterval = 10000
+
+  /**
+   * Run the related actions.
+   *
+   * @param config the configuration
+   */
   override def run(config: Config): Unit = {
     val session = SessionManager(config.tor, config.loginsFile, config.antiCaptchaKey)
 
@@ -35,7 +47,7 @@ class VoteCommand extends Command with Logging {
           }
         })
       } else {
-        Thread.sleep(10000)
+        Thread.sleep(pollingInterval)
       }
 
       votingLoop(true)

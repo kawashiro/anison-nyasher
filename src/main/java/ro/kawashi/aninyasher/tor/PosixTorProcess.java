@@ -8,6 +8,9 @@ import java.lang.Thread;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * A {@link TorProcess} implementation for POSIX systems.
+ */
 public class PosixTorProcess implements TorProcess {
 
     private static final Logger logger = LogManager.getLogger(PosixTorProcess.class);
@@ -16,14 +19,27 @@ public class PosixTorProcess implements TorProcess {
     private Process torProcess;
     private BufferedReader torStdout;
 
+    /**
+     * Creates a new {@link PosixTorProcess} instance providing a string with the path to the tor binary.
+     *
+     * @param torBinary Path to the tor binary.
+     */
     public PosixTorProcess(String torBinary) {
         this(new ProcessBuilder(torBinary).redirectInput(ProcessBuilder.Redirect.PIPE));
     }
 
+    /**
+     * Creates a new {@link PosixTorProcess} instance providing a {@link ProcessBuilder} for the tor binary.
+     *
+     * @param torProcessBuilder Process builder for the tor binary.
+     */
     public PosixTorProcess(ProcessBuilder torProcessBuilder) {
         this.torProcessBuilder = torProcessBuilder;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TorProcess start() throws TorException {
         try {
@@ -40,6 +56,9 @@ public class PosixTorProcess implements TorProcess {
         return this;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void stop() {
         if (torProcess != null) {
@@ -47,6 +66,9 @@ public class PosixTorProcess implements TorProcess {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TorProcess changeExitNode() throws TorException {
         try {
@@ -61,6 +83,9 @@ public class PosixTorProcess implements TorProcess {
         return this;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TorServiceStatus getStatus() {
         if (torProcess == null) {

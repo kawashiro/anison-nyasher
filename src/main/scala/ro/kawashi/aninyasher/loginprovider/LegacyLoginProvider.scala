@@ -5,19 +5,44 @@ import java.io.{File, FileWriter}
 import scala.io.Source
 import scala.util.{Failure, Random, Success, Try}
 
+/**
+ * Companion object for LegacyLoginProvider.
+ */
 object LegacyLoginProvider {
+
   private val password = "qweqwe"
 
+  /**
+   * Create LegacyLoginProvider instance.
+   *
+   * @param filePath String
+   * @return LegacyLoginProvider
+   */
   def apply(filePath: String): LegacyLoginProvider = new LegacyLoginProvider(filePath)
 }
 
+/**
+ * Logins list from a simple text file.
+ *
+ * @param filePath String
+ */
 class LegacyLoginProvider(filePath: String) extends LoginProvider {
   private lazy val innerIterator = load()
 
+  /**
+   * Check if there is a new free login.
+   *
+   * @return Boolean
+   */
   override def hasNext: Boolean = {
     innerIterator.hasNext
   }
 
+  /**
+   * Get the new pair login + password.
+   *
+   * @return (String, String)
+   */
   override def next(): (String, String) = {
     Try(innerIterator.next()) match {
       case Success(value) => value
@@ -25,6 +50,12 @@ class LegacyLoginProvider(filePath: String) extends LoginProvider {
     }
   }
 
+  /**
+   * Add a new login.
+   *
+   * @param login    String
+   * @param password String
+   */
   override def +=(login: String, password: String): Unit = {
     val file = new File(filePath)
     if (!file.exists()) {

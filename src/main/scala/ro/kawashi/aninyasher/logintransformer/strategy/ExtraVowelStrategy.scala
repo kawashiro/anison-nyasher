@@ -2,13 +2,29 @@ package ro.kawashi.aninyasher.logintransformer.strategy
 
 import scala.util.Random
 
+/**
+ * Adds extra vowel to the login.
+ */
 class ExtraVowelStrategy extends Strategy {
 
   private val random = new Random()
+
+  /**
+   * Check if the login can be transformed.
+   *
+   * @param login String
+   * @return Boolean
+   */
   override def canTransform(login: String): Boolean = {
     s"(?i)[$consonants]+".r.findFirstMatchIn(login).isDefined
   }
 
+  /**
+   * Transform the login.
+   *
+   * @param login String
+   * @return String
+   */
   override def transform(login: String): String = {
     var transformed = false
     val prefix = s"(?i)^([^$consonants]+)".r.findPrefixMatchOf(login).getOrElse("")
