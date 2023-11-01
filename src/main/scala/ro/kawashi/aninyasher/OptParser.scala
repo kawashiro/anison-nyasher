@@ -2,7 +2,7 @@ package ro.kawashi.aninyasher
 
 import scopt.OParser
 
-import ro.kawashi.aninyasher.command.{Command, OnAirCommand, VoteCommand}
+import ro.kawashi.aninyasher.command._
 
 /**
  * CLI options parser impl.
@@ -16,8 +16,9 @@ object OptParser {
    * @param tor String
    * @param debug Boolean
    * @param antiCaptchaKey String
+   * @param homeDir String
    * @param songId Int
-   * @param loginsFile String
+   * @param loginsFileOverride String
    * @param comment String
    */
   case class Config(
@@ -26,12 +27,23 @@ object OptParser {
     tor: String = "/usr/lib/anison-nyasher/libexec/tor",
     debug: Boolean = false,
     antiCaptchaKey: String = sys.env.getOrElse("ANTI_CAPTCHA_KEY", ""),
+    homeDir: String = sys.env.getOrElse("HOME", ".") + "/.config/anison-nyasher",
 
     // Vote command params
     songId: Int = -1,
-    loginsFile: String = sys.env.getOrElse("HOME", ".") + "/.anison-logins.txt",
+    loginsFileOverride: Option[String] = None,
     comment: String = ""
-  )
+  ) {
+
+    /**
+     * Get logins file path.
+     *
+     * @return String
+     */
+    def loginsFile: String = {
+      loginsFileOverride.getOrElse(s"$homeDir/logins.txt")
+    }
+  }
 
   /**
    * Configure and get options parser
@@ -57,11 +69,19 @@ object OptParser {
       opt[String]('a', "anti-captcha-key")
         .action((arg, c) => c.copy(antiCaptchaKey = arg))
         .text("anti-captcha.com API key"),
+      opt[String]('h', "home-dir")
+        .action((arg, c) => c.copy(homeDir = arg))
+        .text("Nyasher configuration home directory"),
 
       // On-air command
       cmd("onair")
         .action((_, c) => c.copy(command = Some(new OnAirCommand)))
         .text("Get currently on-air song"),
+
+      // AniDB import command
+      cmd("anidb")
+        .action((_, c) => c.copy(command = Some(new AniDbImportCommand)))
+        .text("Import AniDB dump file into database"),
 
       // Vote command
       cmd("vote")
@@ -73,7 +93,7 @@ object OptParser {
             .required()
             .text("Anison song ID"),
           opt[String]('l', "logins")
-            .action((arg, c) => c.copy(loginsFile = arg))
+            .action((arg, c) => c.copy(loginsFileOverride = Some(arg)))
             .text("Anison logins file"),
           opt[String]('c', "comment")
             .action((arg, c) => c.copy(comment = arg))

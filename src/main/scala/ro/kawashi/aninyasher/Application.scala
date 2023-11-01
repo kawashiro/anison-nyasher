@@ -28,7 +28,7 @@ object Application extends Logging {
           // scalastyle:on regex
         } else {
           logger.info(s"Greeting to Anison from Aninson Nyasher v.${ro.kawashi.aninyasher.version}")
-          Try(config.command.get.run(config)) match {
+          Try(config.command.get.init(config).run(config)) match {
             case Failure(exception) =>
               logger.error(exception.getMessage)
               if (config.debug) {

@@ -139,7 +139,7 @@
         <parameters>
             <parameter name="groups">java,scala,others,aninyasher</parameter>
             <parameter name="group.java">javax?\..+</parameter>
-            <parameter name="group.scala">scala\..+</parameter>
+            <parameter name="group.scala">(scala|sys)\..+</parameter>
             <parameter name="group.aninyasher">ro\.kawashi\..+</parameter>
             <parameter name="group.others">(?!ro\.kawashi\.).*</parameter>
         </parameters>

@@ -1,5 +1,6 @@
 package ro.kawashi.aninyasher.browser
 
+import java.io.FileOutputStream
 import java.net.Proxy
 
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
@@ -7,7 +8,7 @@ import net.ruippeixotog.scalascraper.browser.JsoupBrowser.JsoupDocument
 import net.ruippeixotog.scalascraper.dsl.DSL._
 import net.ruippeixotog.scalascraper.scraper.ContentExtractors.text
 import org.jsoup.{Connection, Jsoup}
-import org.jsoup.Connection.Method.POST
+import org.jsoup.Connection.Method.{GET, POST}
 
 import ro.kawashi.aninyasher.browser.features.Feature
 
@@ -65,6 +66,27 @@ class Browser(override val userAgent: String = Browser.userAgent,
   def getJson(url: String): ujson.Value = {
     val jsonText = get(url) >> text("body")
     ujson.read(jsonText)
+  }
+
+  /**
+   * Download a file.
+   *
+   * @param url String
+   * @param path String
+   */
+  def download(url: String, path: String): Unit = {
+    val pipeline = (conn => defaultRequestSettings(conn))
+      .andThen(requestSettings)
+      .andThen(executeRequest)
+
+    val response = pipeline(Jsoup.connect(url).method(GET).proxy(proxy))
+    val outputStream = new FileOutputStream(path)
+
+    try {
+      outputStream.write(response.bodyAsBytes())
+    } finally {
+      outputStream.close()
+    }
   }
 
   /**
