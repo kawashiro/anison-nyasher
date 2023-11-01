@@ -1,9 +1,13 @@
 package ro.kawashi.aninyasher.remoteservice
 
+import java.io.ByteArrayOutputStream
 import java.net.Proxy
 
+import scala.util.{Failure, Success, Try}
+import scala.xml.XML
+
 import net.ruippeixotog.scalascraper.dsl.DSL._
-import net.ruippeixotog.scalascraper.scraper.ContentExtractors.{attr, text, texts}
+import net.ruippeixotog.scalascraper.scraper.ContentExtractors.{attr, elements, text, texts}
 import org.apache.logging.log4j.scala.Logging
 
 import ro.kawashi.aninyasher.browser.Browser
@@ -64,6 +68,28 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
    * @param key String
    */
   case class CaptchaChallenge(url: String, key: String)
+
+  /**
+   * Song info per anime.
+   *
+   * @param id Int
+   * @param album String
+   * @param artist String
+   * @param title String
+   */
+  case class AnimeSongInfo(id: Int, album: String, artist: String, title: String)
+
+  /**
+   * Anime info object.
+   *
+   * @param titleRu Cyrillic title
+   * @param titleEn Romaji title
+   * @param genres Genres list
+   * @param years Years anime has been aired
+   * @param songs Songs list
+   */
+  case class AnimeInfo(titleRu: String, titleEn: String, genres: Array[String],
+                       years: Set[Int], songs: Array[AnimeSongInfo])
 
   /**
    * Get currently on-air song.
@@ -197,6 +223,64 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
     if (success.isEmpty) {
       throw new AnisonException(s"Something went wrong confirming e-mail (token: $token)")
     }
+  }
+
+  /**
+   * Process each anime at anison.fm
+   *
+   * @param fn Function accepts an AnimeInfo object
+   */
+  def foreachAnimeInfo(fn: AnimeInfo => Unit): Unit = {
+    getAnimeLinks.foreach { link =>
+      Try(getAnimeInfo(link)) match {
+        case Success(value) => fn(value)
+        case Failure(exception) => logger.error(s"Failed to get anime info from $link: ${exception.getMessage}")
+      }
+    }
+  }
+
+  private def getAnimeInfo(link: String): AnimeInfo = {
+    val document = browser.get(link)
+
+    val titleRu = document >> text("span[itemprop=name]")
+    val titleEn = document >> text("span.title_alt")
+    val genres = (document >> text("td[itemprop=genre]")).split(", ")
+
+    val fromTo  = (document >> texts("div.alt_title tr"))
+      .filter(_.contains("период выхода"))
+      .flatMap(x => "\\d{4}".r.findAllIn(x))
+      .map(_.toInt)
+      .toList
+    val years = (fromTo.head to fromTo(1)).toSet
+
+    val songs = (document >> elements("div.album"))
+      .flatMap(albumEl => {
+        val album = albumEl >> text("span.title")
+        (albumEl >> elements("div.titem"))
+          .map(songEl => {
+            val songId = (songEl >> attr("data-song")("div.song_item")).toInt
+            val songTitle = songEl >> text("a.local_link")
+            val songArtist = songEl >> text("span[itemprop=name]")
+            AnimeSongInfo(songId, album, songArtist, songTitle)
+          })
+      })
+      .toArray
+
+    AnimeInfo(titleRu, titleEn, genres, years, songs)
+  }
+
+  private def getAnimeLinks: Iterable[String] = {
+    val stream = new ByteArrayOutputStream()
+    browser.download(s"${Anison.anisonBaseUrl}/sitemap.xml", stream)
+
+    val xml = XML.loadString(stream.toString("UTF-8"))
+
+    (xml \\ "loc").map(_.text)
+      .flatMap(
+        s"^${Anison.anisonBaseUrl}/catalog/\\d+/[^/]+$$".r
+          .findFirstMatchIn(_)
+          .map(_.group(0))
+      )
   }
 
   private def getStatusData: ujson.Value = {

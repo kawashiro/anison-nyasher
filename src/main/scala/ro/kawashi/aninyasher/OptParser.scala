@@ -83,6 +83,11 @@ object OptParser {
         .action((_, c) => c.copy(command = Some(new AniDbImportCommand)))
         .text("Import AniDB dump file into database"),
 
+      // Anison songs DB import command
+      cmd("anisondb")
+        .action((_, c) => c.copy(command = Some(new AnisonDbImportCommand)))
+        .text("Import Anison songs DB into database"),
+
       // Vote command
       cmd("vote")
         .action((_, c) => c.copy(command = Some(new VoteCommand)))

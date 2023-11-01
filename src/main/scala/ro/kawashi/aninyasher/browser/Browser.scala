@@ -1,6 +1,6 @@
 package ro.kawashi.aninyasher.browser
 
-import java.io.FileOutputStream
+import java.io.{FileOutputStream, OutputStream}
 import java.net.Proxy
 
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
@@ -75,12 +75,21 @@ class Browser(override val userAgent: String = Browser.userAgent,
    * @param path String
    */
   def download(url: String, path: String): Unit = {
+    download(url, new FileOutputStream(path))
+  }
+
+  /**
+   * Download a file to a stream.
+   *
+   * @param url  String
+   * @param outputStream OutputStream
+   */
+  def download(url: String, outputStream: OutputStream): Unit = {
     val pipeline = (conn => defaultRequestSettings(conn))
       .andThen(requestSettings)
       .andThen(executeRequest)
 
     val response = pipeline(Jsoup.connect(url).method(GET).proxy(proxy))
-    val outputStream = new FileOutputStream(path)
 
     try {
       outputStream.write(response.bodyAsBytes())

@@ -17,6 +17,7 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
     implementation 'org.apache.logging.log4j:log4j-api-scala_2.12:12.0'
     implementation 'com.github.scopt:scopt_2.12:4.1.0'
+    implementation 'org.scala-lang.modules:scala-xml_2.12:2.2.0'
     testImplementation 'org.scalatest:scalatest_2.12:3.2.17'
 
     /**

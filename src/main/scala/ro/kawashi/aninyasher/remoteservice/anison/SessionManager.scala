@@ -66,12 +66,18 @@ class SessionManager(userAgentList: UserAgentList,
   /**
    * Do a task anonymously.
    *
+   * @param withProxy Boolean
    * @param fn Anison => T
    * @tparam T Type of the result
    * @return T
    */
-  def doAnonymously[T](fn: Anison => T): T = {
-    fn(Anison(userAgentList.next()))
+  def doAnonymously[T](withProxy: Boolean = false)(fn: Anison => T): T = {
+    val userAgent = userAgentList.next()
+    // scalastyle:off null
+    val proxy = if (withProxy) proxyProvider.next() else null
+    // scalastyle:on null
+
+    fn(Anison(userAgent, proxy))
   }
 
   /**

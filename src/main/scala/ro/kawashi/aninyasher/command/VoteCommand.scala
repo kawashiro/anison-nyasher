@@ -27,7 +27,7 @@ class VoteCommand extends Command with Logging {
 
     @tailrec
     def votingLoop(wasOnTop: Boolean = false): Unit = {
-      val songStatus = session.doAnonymously(_.getSongStatus(config.songId))
+      val songStatus = session.doAnonymously()(_.getSongStatus(config.songId))
 
       val votesToDo = songStatus.topSongVotes - songStatus.votes + 1
       val isInQueue = songStatus.votes > 0
