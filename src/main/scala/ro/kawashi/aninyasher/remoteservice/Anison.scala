@@ -1,10 +1,10 @@
 package ro.kawashi.aninyasher.remoteservice
 
 import java.io.ByteArrayOutputStream
-import java.net.Proxy
+import java.net.{Proxy, URL}
 
 import scala.util.{Failure, Success, Try}
-import scala.xml.XML
+import scala.xml.{Elem, XML}
 
 import net.ruippeixotog.scalascraper.dsl.DSL._
 import net.ruippeixotog.scalascraper.scraper.ContentExtractors.{attr, elements, text, texts}
@@ -12,12 +12,96 @@ import org.apache.logging.log4j.scala.Logging
 
 import ro.kawashi.aninyasher.browser.Browser
 import ro.kawashi.aninyasher.browser.features.Referer
+import ro.kawashi.aninyasher.remoteservice.Anison._
 import ro.kawashi.aninyasher.remoteservice.anison.AnisonException
 
 /**
  * Companion object for Anison.
  */
 object Anison {
+
+  /**
+   * Song info.
+   *
+   * @param anime String
+   * @param title String
+   */
+  case class SongInfo(anime: String, title: String)
+
+  /**
+   * Song status in the airing queue.
+   *
+   * @param votes        Int
+   * @param topSongVotes Int
+   */
+  case class SongStatus(votes: Int, topSongVotes: Int)
+
+  /**
+   * ReCaptcha request
+   *
+   * @param url String
+   * @param key String
+   */
+  case class CaptchaChallenge(url: String, key: String)
+
+  /**
+   * Song info per anime.
+   *
+   * @param id     Int
+   * @param album  String
+   * @param artist String
+   * @param title  String
+   */
+  case class AnimeSongInfo(id: Int, album: String, artist: String, title: String) {
+
+    /**
+     * Convert entity to XML
+     *
+     * @return Elem
+     */
+    def toXML: Elem = {
+      <song>
+        <id>{id}</id>
+        <album>{album}</album>
+        <artist>{artist}</artist>
+        <title>{title}</title>
+      </song>
+    }
+  }
+
+  /**
+   * Anime info object.
+   *
+   * @param titleRu Cyrillic title
+   * @param titleEn Romaji title
+   * @param genres  Genres list
+   * @param years   Years anime has been aired
+   * @param songs   Songs list
+   */
+  case class AnimeInfo(titleRu: String, titleEn: String, genres: Array[String],
+                       years: Set[Int], songs: Array[AnimeSongInfo]) {
+
+    /**
+     * Convert entity to XML
+     *
+     * @return Elem
+     */
+    def toXML: Elem = {
+      <anime>
+        <title_ru>{titleRu}</title_ru>
+        <title_en>{titleEn}</title_en>
+        <genres>
+          {genres.map(genre => <genre>{genre}</genre>)}
+        </genres>
+        <years>
+          {years.map(year => <year>{year}</year>)}
+        </years>
+        <songs>
+          {songs.map(_.toXML)}
+        </songs>
+      </anime>
+    }
+  }
 
   private val anisonBaseUrl = "https://anison.fm"
 
@@ -45,51 +129,6 @@ object Anison {
  */
 class Anison(override protected val browser: Browser) extends RemoteService(browser) with Logging {
 
-  /**
-   * Song info.
-   *
-   * @param anime String
-   * @param title String
-   */
-  case class SongInfo(anime: String, title: String)
-
-  /**
-   * Song status in the airing queue.
-   *
-   * @param votes Int
-   * @param topSongVotes Int
-   */
-  case class SongStatus(votes: Int, topSongVotes: Int)
-
-  /**
-   * ReCaptcha request
-   *
-   * @param url String
-   * @param key String
-   */
-  case class CaptchaChallenge(url: String, key: String)
-
-  /**
-   * Song info per anime.
-   *
-   * @param id Int
-   * @param album String
-   * @param artist String
-   * @param title String
-   */
-  case class AnimeSongInfo(id: Int, album: String, artist: String, title: String)
-
-  /**
-   * Anime info object.
-   *
-   * @param titleRu Cyrillic title
-   * @param titleEn Romaji title
-   * @param genres Genres list
-   * @param years Years anime has been aired
-   * @param songs Songs list
-   */
-  case class AnimeInfo(titleRu: String, titleEn: String, genres: Array[String],
-                       years: Set[Int], songs: Array[AnimeSongInfo])
 
   /**
    * Get currently on-air song.
@@ -240,18 +279,22 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
   }
 
   private def getAnimeInfo(link: String): AnimeInfo = {
-    val document = browser.get(link)
+    val document = browser.get(new URL(link))
 
     val titleRu = document >> text("span[itemprop=name]")
-    val titleEn = document >> text("span.title_alt")
-    val genres = (document >> text("td[itemprop=genre]")).split(", ")
+    val titleEn = document >?> text("span.title_alt")
+    val genres = (document >?> text("td[itemprop=genre]")).map(_.split(", ")).getOrElse(Array.empty[String])
 
     val fromTo  = (document >> texts("div.alt_title tr"))
       .filter(_.contains("период выхода"))
       .flatMap(x => "\\d{4}".r.findAllIn(x))
       .map(_.toInt)
       .toList
-    val years = (fromTo.head to fromTo(1)).toSet
+    val years = fromTo match {
+      case List(from, to) => (from to to).toSet
+      case List(from) => Set(from)
+      case _ => Set.empty[Int]
+    }
 
     val songs = (document >> elements("div.album"))
       .flatMap(albumEl => {
@@ -259,14 +302,14 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
         (albumEl >> elements("div.titem"))
           .map(songEl => {
             val songId = (songEl >> attr("data-song")("div.song_item")).toInt
-            val songTitle = songEl >> text("a.local_link")
-            val songArtist = songEl >> text("span[itemprop=name]")
-            AnimeSongInfo(songId, album, songArtist, songTitle)
+            val songTitle = songEl >?> text("a.local_link")
+            val songArtist = songEl >?> text("span[itemprop=name]")
+            AnimeSongInfo(songId, album, songArtist.getOrElse(""), songTitle.getOrElse(""))
           })
       })
       .toArray
 
-    AnimeInfo(titleRu, titleEn, genres, years, songs)
+    AnimeInfo(titleRu, titleEn.getOrElse(""), genres, years, songs)
   }
 
   private def getAnimeLinks: Iterable[String] = {

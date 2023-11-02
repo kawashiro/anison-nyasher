@@ -22,5 +22,7 @@ class AnisonDbImportCommand extends Command with Logging {
     val database = AnisonDatabase(config.homeDir)
 
     session.doAnonymously(withProxy = true)(database.importDatabase)
+
+    logger.info("All done!")
   }
 }

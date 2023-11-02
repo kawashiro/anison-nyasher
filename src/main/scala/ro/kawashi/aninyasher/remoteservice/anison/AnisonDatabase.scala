@@ -1,6 +1,7 @@
 package ro.kawashi.aninyasher.remoteservice.anison
 
-import java.io.FileWriter
+import scala.collection.mutable.ListBuffer
+import scala.xml.XML
 
 import org.apache.logging.log4j.scala.Logging
 
@@ -11,7 +12,7 @@ import ro.kawashi.aninyasher.remoteservice.Anison
  */
 object AnisonDatabase {
 
-  private val fileName = "anisondb.tsv"
+  private val fileName = "anisondb.xml"
 
   /**
    * Create a new AnisonDatabase instance.
@@ -35,19 +36,18 @@ class AnisonDatabase(homeDir: String) extends Logging {
    * @param anisonService Anison
    */
   def importDatabase(anisonService: Anison): Unit = {
-    val writer = new FileWriter(s"$homeDir/${AnisonDatabase.fileName}")
+    val animeList = ListBuffer.empty[Anison.AnimeInfo]
     try {
       anisonService.foreachAnimeInfo { anime =>
         logger.info(s"Importing ${anime.titleEn} / ${anime.titleRu}")
-        anime.songs.foreach { song =>
-          val songStr = s"${anime.titleEn}\t${anime.titleRu}\t${anime.years.mkString(",")}" +
-            s"\t${song.id}\t${song.album}\t${song.artist}\t${song.title}\n"
-          writer.write(songStr)
-          writer.flush()
-        }
+        animeList += anime
       }
     } finally {
-      writer.close()
+      XML.save(
+        s"$homeDir/${AnisonDatabase.fileName}",
+        <animes>{animeList.map(_.toXML)}</animes>,
+        xmlDecl = true,
+      )
     }
   }
 }

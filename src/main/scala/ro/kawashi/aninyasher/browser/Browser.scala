@@ -1,7 +1,7 @@
 package ro.kawashi.aninyasher.browser
 
 import java.io.{FileOutputStream, OutputStream}
-import java.net.Proxy
+import java.net.{Proxy, URL}
 
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser
 import net.ruippeixotog.scalascraper.browser.JsoupBrowser.JsoupDocument
@@ -9,6 +9,7 @@ import net.ruippeixotog.scalascraper.dsl.DSL._
 import net.ruippeixotog.scalascraper.scraper.ContentExtractors.text
 import org.jsoup.{Connection, Jsoup}
 import org.jsoup.Connection.Method.{GET, POST}
+import org.jsoup.helper.HttpConnection
 
 import ro.kawashi.aninyasher.browser.features.Feature
 
@@ -66,6 +67,21 @@ class Browser(override val userAgent: String = Browser.userAgent,
   def getJson(url: String): ujson.Value = {
     val jsonText = get(url) >> text("body")
     ujson.read(jsonText)
+  }
+
+  /**
+   * TURBOHACK - Workaround for anison-incompatible URL encoding implemented in Jsoup.
+   *
+   * @param url URL
+   * @return JsoupDocument
+   */
+  def get(url: URL): JsoupDocument = {
+    val pipeline = (conn => defaultRequestSettings(conn))
+      .andThen(requestSettings)
+      .andThen(executeRequest)
+      .andThen(processResponse)
+
+    pipeline(HttpConnection.connect(url).method(GET).proxy(proxy))
   }
 
   /**
