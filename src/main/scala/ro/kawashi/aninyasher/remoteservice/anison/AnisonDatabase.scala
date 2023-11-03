@@ -70,9 +70,11 @@ class AnisonDatabase(homeDir: String) extends Logging {
    *
    * @param keywords Option[String]
    * @param year Option[Int]
+   * @param strict Boolean
    * @return List[Anison.AnimeInfo]
    */
-  def search(keywords: Option[String], year: Option[(Int, Int)]): List[AnisonDatabase.SearchResult] = {
+  def search(keywords: Option[String], year: Option[(Int, Int)],
+             strict: Boolean = false): List[AnisonDatabase.SearchResult] = {
     val kwToSet = (kw: String) => kw.toLowerCase(new Locale("ru")).split(" ").filter(_.nonEmpty).toSet
 
     val keywordsFilter = keywords match {
@@ -83,7 +85,7 @@ class AnisonDatabase(homeDir: String) extends Logging {
           anime.songs.map { song =>
             val songKeywords = kwToSet(song.artist + " " + song.title + " " + song.album) ++ animeKeywords
             val score = keywords_.toList
-              .map(kw => songKeywords.map(skw => Levenshtein.score(skw, kw)).max).sum / keywords_.size
+              .map(kw => songKeywords.map(skw => Levenshtein.score(skw, kw)).max).sum
             AnisonDatabase.SearchResult(anime, song, score)
           }.toIterator
         }
@@ -104,7 +106,8 @@ class AnisonDatabase(homeDir: String) extends Logging {
       case None => (prevResult: AnisonDatabase.SearchResult) => List(prevResult).toIterator
     }
 
-    content.flatMap(keywordsFilter).flatMap(yearsFilter).filter(_.score > 0.7).sortBy(-_.score)
+    val threshold = if (strict) Seq(kwToSet(keywords.getOrElse("")).size, 1).max.toDouble else 0.7
+    content.flatMap(keywordsFilter).flatMap(yearsFilter).filter(_.score >= threshold).sortBy(-_.score)
   }
 
   private def load(): List[Anison.AnimeInfo] = {

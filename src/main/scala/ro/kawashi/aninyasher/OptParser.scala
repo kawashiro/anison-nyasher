@@ -22,6 +22,7 @@ object OptParser {
    * @param comment String
    * @param year Int from -> Int to
    * @param keywords String
+   * @param strictMatch Boolean
    */
   case class Config(
     // Global options
@@ -39,6 +40,7 @@ object OptParser {
     // Playlist command params
     year: Option[(Int, Int)] = None,
     keywords: Option[String] = None,
+    strictMatch: Boolean = false,
   ) {
 
     /**
@@ -125,6 +127,9 @@ object OptParser {
           opt[String]('k', "keywords")
             .action((arg, c) => c.copy(keywords = Some(arg)))
             .text("keywords to search for"),
+          opt[Boolean]('r', "strict")
+            .action((arg, c) => c.copy(strictMatch = arg))
+            .text("strict match for the song keywords"),
         ),
     )
   }

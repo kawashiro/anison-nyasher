@@ -19,7 +19,7 @@ class PlaylistCommand extends Command with Logging {
     logger.info("Searching for the songs...")
 
     val database = AnisonDatabase(config.homeDir)
-    val playlist = database.search(config.keywords, config.year)
+    val playlist = database.search(config.keywords, config.year, config.strictMatch)
     playlist.foreach { res =>
       logger.info(
         s"${res.song.id} :: ${res.song.artist} - ${res.song.title} " +
