@@ -18,6 +18,7 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-api-scala_2.12:12.0'
     implementation 'com.github.scopt:scopt_2.12:4.1.0'
     implementation 'org.scala-lang.modules:scala-xml_2.12:2.2.0'
+    implementation 'com.github.vickumar1981:stringdistance_2.12:1.2.7'
     testImplementation 'org.scalatest:scalatest_2.12:3.2.17'
 
     /**

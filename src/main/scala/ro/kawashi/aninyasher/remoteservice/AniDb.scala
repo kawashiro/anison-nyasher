@@ -8,6 +8,9 @@ import ro.kawashi.aninyasher.browser.Browser
 import ro.kawashi.aninyasher.browser.features.AcceptAny
 import ro.kawashi.aninyasher.useragent.BuiltInUserAgentList
 
+/**
+ * Companion object for AniDB.
+ */
 object AniDb {
 
   private val dumpFile = "anidb.xml.gz"

@@ -20,6 +20,8 @@ object OptParser {
    * @param songId Int
    * @param loginsFileOverride String
    * @param comment String
+   * @param year Int from -> Int to
+   * @param keywords String
    */
   case class Config(
     // Global options
@@ -32,7 +34,11 @@ object OptParser {
     // Vote command params
     songId: Int = -1,
     loginsFileOverride: Option[String] = None,
-    comment: String = ""
+    comment: String = "",
+
+    // Playlist command params
+    year: Option[(Int, Int)] = None,
+    keywords: Option[String] = None,
   ) {
 
     /**
@@ -103,6 +109,22 @@ object OptParser {
           opt[String]('c', "comment")
             .action((arg, c) => c.copy(comment = arg))
             .text("Anison comment for the vote"),
+        ),
+
+      // Playlist command
+      cmd("playlist")
+        .action((_, c) => c.copy(command = Some(new PlaylistCommand)))
+        .text("Create and submit a playlist")
+        .children(
+          opt[String]('y', "year")
+            .action((arg, c) => c.copy(year = arg.split("-").map(_.toInt) match {
+              case Array(from, to) => Some((from, to))
+              case _ => None
+            }))
+            .text("year of the anime title"),
+          opt[String]('k', "keywords")
+            .action((arg, c) => c.copy(keywords = Some(arg)))
+            .text("keywords to search for"),
         ),
     )
   }
