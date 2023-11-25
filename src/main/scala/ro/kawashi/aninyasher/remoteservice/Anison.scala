@@ -148,7 +148,7 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
    */
   def getSongStatus(songId: Int): SongStatus = {
     def votesOrZero(data: ujson.Value, filter: Int => Boolean): Int = {
-      val iterator = data("orders_list").arr.filter(el => filter(el("song_id").str.toInt))
+      val iterator = data("orders_list").arr.filter(el => filter(el("song_id").str.toInt) && el("votes").str.toInt < 99)
       if (iterator.isEmpty) 0 else iterator.head("votes").str.toInt
     }
 
