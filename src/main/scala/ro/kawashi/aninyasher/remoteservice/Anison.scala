@@ -13,7 +13,7 @@ import org.apache.logging.log4j.scala.Logging
 import ro.kawashi.aninyasher.browser.Browser
 import ro.kawashi.aninyasher.browser.features.Referer
 import ro.kawashi.aninyasher.remoteservice.Anison._
-import ro.kawashi.aninyasher.remoteservice.anison.AnisonException
+import ro.kawashi.aninyasher.remoteservice.anison.{AnisonException, SongNotVotableException}
 
 /**
  * Companion object for Anison.
@@ -224,7 +224,13 @@ class Anison(override protected val browser: Browser) extends RemoteService(brow
       "comment" -> comment,
     )) >?> text("div.error")
 
-    error.foreach(err => throw new AnisonException(s"Unable to vote for the song #$songId: $err"))
+    error.foreach(err => {
+      if (err.contains("звучал")) {
+        throw new SongNotVotableException(s"Song #$songId was already aired: $err")
+      } else {
+        throw new AnisonException(s"Unable to vote for the song #$songId: $err")
+      }
+    })
   }
 
   /**

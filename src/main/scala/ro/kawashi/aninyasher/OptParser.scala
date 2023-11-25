@@ -23,6 +23,7 @@ object OptParser {
    * @param year Int from -> Int to
    * @param keywords String
    * @param strictMatch Boolean
+   * @param preview Boolean
    */
   case class Config(
     // Global options
@@ -41,6 +42,7 @@ object OptParser {
     year: Option[(Int, Int)] = None,
     keywords: Option[String] = None,
     strictMatch: Boolean = false,
+    preview: Boolean = false,
   ) {
 
     /**
@@ -80,6 +82,9 @@ object OptParser {
       opt[String]('h', "home-dir")
         .action((arg, c) => c.copy(homeDir = arg))
         .text("Nyasher configuration home directory"),
+      opt[String]('l', "logins")
+        .action((arg, c) => c.copy(loginsFileOverride = Some(arg)))
+        .text("Anison logins file"),
 
       // On-air command
       cmd("onair")
@@ -105,9 +110,6 @@ object OptParser {
             .action((arg, c) => c.copy(songId = arg))
             .required()
             .text("Anison song ID"),
-          opt[String]('l', "logins")
-            .action((arg, c) => c.copy(loginsFileOverride = Some(arg)))
-            .text("Anison logins file"),
           opt[String]('c', "comment")
             .action((arg, c) => c.copy(comment = arg))
             .text("Anison comment for the vote"),
@@ -130,6 +132,9 @@ object OptParser {
           opt[Boolean]('r', "strict")
             .action((arg, c) => c.copy(strictMatch = arg))
             .text("strict match for the song keywords"),
+          opt[Boolean]('p', "preview")
+            .action((arg, c) => c.copy(preview = arg))
+            .text("preview the playlist instead of voting"),
         ),
     )
   }

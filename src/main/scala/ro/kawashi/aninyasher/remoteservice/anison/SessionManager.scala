@@ -129,6 +129,23 @@ class SessionManager(userAgentList: UserAgentList,
     }
   }
 
+  /**
+   * Create a new session manager with a new login provider to reset logins list.
+   *
+   * @param newLoginProvider LoginProvider
+   * @return SessionManager
+   */
+  def withNewLoginProvider(newLoginProvider: LoginProvider): SessionManager = {
+    new SessionManager(
+      userAgentList,
+      proxyProvider,
+      newLoginProvider,
+      loginTransformer,
+      captchaSolver,
+      temporaryInbox,
+    )
+  }
+
   private def getRegistrationSeedLogin(session: Anison): String = {
     val maxId = session.getVoters.max
 
