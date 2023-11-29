@@ -13,3 +13,10 @@ class AnisonException(message: String) extends RuntimeException(message)
  * @param message String
  */
 class SongNotVotableException(message: String) extends AnisonException(message)
+
+/**
+ * Exception if a song from this anime was already aired.
+ *
+ * @param message String
+ */
+class AnimeNotVotableException(message: String) extends AnisonException(message)

@@ -52,6 +52,7 @@ class VotingHelper(session: SessionManager) extends Logging {
             logger.info("Voted successfully!")
 
           } catch {
+            case e: AnimeNotVotableException => throw e
             case e: SongNotVotableException => throw e
             case e: AnisonException => logger.warn(s"Failed to vote for #$songId: ${e.getMessage}")
           }
@@ -63,10 +64,6 @@ class VotingHelper(session: SessionManager) extends Logging {
       votingLoop(true)
     }
 
-    try {
-      votingLoop()
-    } catch {
-      case e: SongNotVotableException => logger.error(s"Song #$songId is not votable: ${e.getMessage}")
-    }
+    votingLoop()
   }
 }

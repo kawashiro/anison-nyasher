@@ -3,7 +3,7 @@ package ro.kawashi.aninyasher.command
 import org.apache.logging.log4j.scala.Logging
 
 import ro.kawashi.aninyasher.OptParser.Config
-import ro.kawashi.aninyasher.remoteservice.anison.{SessionManager, VotingHelper}
+import ro.kawashi.aninyasher.remoteservice.anison._
 
 /**
  * Implementation of simple voting by song ID
@@ -21,6 +21,11 @@ class VoteCommand extends Command with Logging {
     logger.info(s"Voting for song #${config.songId}")
 
     val votingHelper = VotingHelper(SessionManager(config.tor, config.loginsFile, config.antiCaptchaKey))
-    votingHelper.vote(config.songId, config.comment)
+    try {
+      votingHelper.vote(config.songId, config.comment)
+    } catch {
+      case e: AnisonException =>
+        logger.error(s"Failed to vote for song ${config.songId}: ${e.getMessage}")
+    }
   }
 }
