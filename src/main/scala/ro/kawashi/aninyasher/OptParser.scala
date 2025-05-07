@@ -13,7 +13,7 @@ object OptParser {
    * Command config.
    *
    * @param command Command
-   * @param tor String
+   * @param proxy String
    * @param debug Boolean
    * @param antiCaptchaKey String
    * @param tempMailSoKey String
@@ -30,7 +30,7 @@ object OptParser {
   case class Config(
     // Global options
     command: Option[Command] = None,
-    tor: String = "/usr/lib/anison-nyasher/libexec/tor",
+    proxy: String = "tor:/usr/lib/anison-nyasher/libexec/tor",
     debug: Boolean = false,
     antiCaptchaKey: String = sys.env.getOrElse("ANTI_CAPTCHA_KEY", ""),
     tempMailSoKey: String = sys.env.getOrElse("TEMPMAIL_SO_KEY", ""),
@@ -74,9 +74,9 @@ object OptParser {
       programName(ro.kawashi.aninyasher.name),
       head(ro.kawashi.aninyasher.name, ro.kawashi.aninyasher.version),
 
-      opt[String]('t', "tor")
-        .action((arg, c) => c.copy(tor = arg))
-        .text("path to tor executable; pass `disable` to use a direct connection"),
+      opt[String]('p', "proxy")
+        .action((arg, c) => c.copy(proxy = arg))
+        .text("path to a file; path to tor:executable; pass `disable` to use a direct connection"),
       opt[Boolean]('d', "debug")
         .action((arg, c) => c.copy(debug = arg))
         .text("print error backtraces"),
@@ -142,7 +142,7 @@ object OptParser {
           opt[Boolean]('r', "strict")
             .action((arg, c) => c.copy(strictMatch = arg))
             .text("strict match for the song keywords"),
-          opt[Boolean]('p', "preview")
+          opt[Boolean]('v', "preview")
             .action((arg, c) => c.copy(preview = arg))
             .text("preview the playlist instead of voting"),
         ),

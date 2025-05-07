@@ -19,7 +19,7 @@ import ro.kawashi.aninyasher.browser.features.Feature
 object Browser {
 
   private val userAgent = s"${ro.kawashi.aninyasher.name}/${ro.kawashi.aninyasher.version}"
-  private val connectionTimeout = 60000
+  private val connectionTimeout = 10000
 
   /**
    * Create a new browser instance.

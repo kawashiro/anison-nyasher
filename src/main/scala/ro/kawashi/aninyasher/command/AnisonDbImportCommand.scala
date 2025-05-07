@@ -19,7 +19,7 @@ class AnisonDbImportCommand extends Command with Logging {
     logger.info("Importing AnisonDB anime data...")
 
     val session = SessionManager(
-      config.tor, config.loginsFile, config.antiCaptchaKey, config.tempMailSoKey, config.rapidApiKey
+      config.proxy, config.loginsFile, config.antiCaptchaKey, config.tempMailSoKey, config.rapidApiKey
     )
     val database = AnisonDatabase(config.homeDir)
 

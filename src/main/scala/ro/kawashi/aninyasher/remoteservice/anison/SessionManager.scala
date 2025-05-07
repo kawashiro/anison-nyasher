@@ -10,7 +10,7 @@ import ro.kawashi.aninyasher.email.{TemporaryInbox, TempMailSo}
 import ro.kawashi.aninyasher.loginprovider.{LegacyLoginProvider, LoginProvider}
 import ro.kawashi.aninyasher.logintransformer.LoginTransformer
 import ro.kawashi.aninyasher.logintransformer.strategy._
-import ro.kawashi.aninyasher.proxy.{ProxyProvider, TorProxyProvider}
+import ro.kawashi.aninyasher.proxy.{ListProxyProvider, ProxyProvider, TorProxyProvider}
 import ro.kawashi.aninyasher.remoteservice.Anison
 import ro.kawashi.aninyasher.tor.PosixTorProcess
 import ro.kawashi.aninyasher.useragent.{BuiltInUserAgentList, UserAgentList}
@@ -26,18 +26,18 @@ object SessionManager {
   /**
    * Create a new session manager.
    *
-   * @param torBinary String
+   * @param proxy String
    * @param loginsFilePath String
    * @param antiCaptchaKey String
    * @param tempMailSoKey String
    * @param rapidApiKey String
    * @return SessionManager
    */
-  def apply(torBinary: String, loginsFilePath: String, antiCaptchaKey: String,
+  def apply(proxy: String, loginsFilePath: String, antiCaptchaKey: String,
             tempMailSoKey: String, rapidApiKey: String): SessionManager = {
     new SessionManager(
       BuiltInUserAgentList(),
-      getProxyProvider(torBinary),
+      getProxyProvider(proxy),
       LegacyLoginProvider(loginsFilePath),
       LoginTransformer()
         .addStrategy(new ExtraSyllableStrategy)
@@ -48,11 +48,12 @@ object SessionManager {
     )
   }
 
-  private def getProxyProvider(torBinary: String): ProxyProvider = {
-    if (torBinary == disableTorFlag) {
-      () => None
-    } else {
-      TorProxyProvider(new PosixTorProcess(torBinary).start())
+  private def getProxyProvider(proxy: String): ProxyProvider = {
+    proxy match {
+      case flag: String if flag == disableTorFlag => () => None
+      case path: String if path.startsWith("tor:") =>
+        TorProxyProvider(new PosixTorProcess(path.replace("tor:", "")).start())
+      case filePath: String => ListProxyProvider(filePath)
     }
   }
 }

@@ -36,7 +36,7 @@ class PlaylistCommand extends Command with Logging {
       logger.info("Playing the playlist ^-^")
       val airedAnimes = MutableSet.empty[String]
       val session = SessionManager(
-        config.tor, config.loginsFile, config.antiCaptchaKey, config.tempMailSoKey, config.rapidApiKey
+        config.proxy, config.loginsFile, config.antiCaptchaKey, config.tempMailSoKey, config.rapidApiKey
       )
       Random.shuffle(playlist).foldLeft(session)(
         (session, song) => {
