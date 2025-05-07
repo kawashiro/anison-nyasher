@@ -45,23 +45,26 @@ class VotingHelper(session: SessionManager) extends Logging {
       }
 
       logger.info(s"$votesToDo votes to be done")
-      if (votesToDo > 0) {
-        (1 to votesToDo).foreach({ iteration =>
+      val statuses = if (votesToDo > 0) {
+        (1 to votesToDo).map({ iteration =>
           try {
             session.doAuthorized(_.vote(songId, if (iteration == 1 && !wasOnTop) comment else ""))
             logger.info("Voted successfully!")
+            true
 
           } catch {
             case e: AnimeNotVotableException => throw e
             case e: SongNotVotableException => throw e
             case e: AnisonException => logger.warn(s"Failed to vote for #$songId: ${e.getMessage}")
+              false
           }
-        })
+        }).toList
       } else {
         Thread.sleep(pollingInterval)
+        Nil
       }
 
-      votingLoop(true)
+      votingLoop(statuses.reduce(_ && _))
     }
 
     votingLoop()

@@ -18,7 +18,7 @@ object IPChecker {
    * @return IPChecker
    */
   def apply(proxy: Proxy): IPChecker = {
-    val browser = Browser(proxy = proxy).applyFeature(new AcceptAny)
+    val browser = Browser(proxy = Some(proxy)).applyFeature(new AcceptAny)
     new IPChecker(browser)
   }
 }

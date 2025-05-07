@@ -28,25 +28,21 @@ object Browser {
    * @param proxy proxy
    * @return Browser
    */
-  // scalastyle:off null
-  def apply(userAgent: String = userAgent, proxy: Proxy = null): Browser = {
+  def apply(userAgent: String = userAgent, proxy: Option[Proxy] = None): Browser = {
     new Browser(userAgent, proxy)
   }
-  // scalastyle:on null
 }
 
 /**
  * A browser is a wrapper around a jsoup browser.
  *
  * @param userAgent user agent
- * @param proxy proxy
+ * @param proxyOpt proxy
  * @param features a list of additional features
  */
-// scalastyle:off null
 class Browser(override val userAgent: String = Browser.userAgent,
-              override val proxy: Proxy = null,
-              private val features: List[Feature] = Nil) extends JsoupBrowser(userAgent, proxy) {
-// scalastyle:on null
+              private val proxyOpt: Option[Proxy] = None,
+              private val features: List[Feature] = Nil) extends JsoupBrowser(userAgent, proxyOpt.orNull) {
 
   /**
    * Add a new feature to the browser.
@@ -55,7 +51,7 @@ class Browser(override val userAgent: String = Browser.userAgent,
    * @return Browser
    */
   def applyFeature(feature: Feature): Browser = {
-    new Browser(userAgent, proxy, feature :: features)
+    new Browser(userAgent, proxyOpt, feature :: features)
   }
 
   /**

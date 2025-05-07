@@ -7,4 +7,4 @@ import ro.kawashi.aninyasher.util.InfiniteIterator
 /**
  * Proxy list with random proxies interface.
  */
-trait ProxyProvider extends InfiniteIterator[Proxy]
+trait ProxyProvider extends InfiniteIterator[Option[Proxy]]

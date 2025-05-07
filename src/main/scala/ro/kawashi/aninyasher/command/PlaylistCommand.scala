@@ -35,7 +35,10 @@ class PlaylistCommand extends Command with Logging {
     } else {
       logger.info("Playing the playlist ^-^")
       val airedAnimes = MutableSet.empty[String]
-      Random.shuffle(playlist).foldLeft(SessionManager(config.tor, config.loginsFile, config.antiCaptchaKey))(
+      val session = SessionManager(
+        config.tor, config.loginsFile, config.antiCaptchaKey, config.tempMailSoKey, config.rapidApiKey
+      )
+      Random.shuffle(playlist).foldLeft(session)(
         (session, song) => {
           if (!airedAnimes.contains(song.anime.titleEn)) {
             val votingHelper = VotingHelper(session)

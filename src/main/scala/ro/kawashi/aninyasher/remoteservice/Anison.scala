@@ -112,14 +112,12 @@ object Anison {
    * @param proxy Proxy
    * @return Anison
    */
-  // scalastyle:off null
-  def apply(userAgent: String, proxy: Proxy = null): Anison = {
+  def apply(userAgent: String, proxy: Option[Proxy] = None): Anison = {
     val browser = Browser(userAgent = userAgent, proxy = proxy)
       .applyFeature(new Referer(Some(anisonBaseUrl)))
 
     new Anison(browser)
   }
-  // scalastyle:on null
 }
 
 /**

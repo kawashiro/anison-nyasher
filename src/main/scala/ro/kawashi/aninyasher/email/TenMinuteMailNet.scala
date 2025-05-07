@@ -41,9 +41,10 @@ class TenMinuteMailNet(override protected val browser: Browser)
   /**
    * Create a new inbox and return it's address.
    *
+   * @param preferredLogin String
    * @return String
    */
-  override def create(): String = {
+  override def create(preferredLogin: String): String = {
     browser.get(s"${TenMinuteMailNet.baseUrl}/new.html") >> attr("value")("input#fe_text")
   }
 

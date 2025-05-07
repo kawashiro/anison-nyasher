@@ -8,9 +8,10 @@ trait TemporaryInbox {
   /**
    * Create a new inbox and return it's address.
    *
+   * @param preferredLogin String
    * @return String
    */
-  def create(): String
+  def create(preferredLogin: String): String
 
   /**
    * Process each new email.

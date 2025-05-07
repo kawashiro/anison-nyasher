@@ -20,7 +20,9 @@ class VoteCommand extends Command with Logging {
   override def run(config: Config): Unit = {
     logger.info(s"Voting for song #${config.songId}")
 
-    val votingHelper = VotingHelper(SessionManager(config.tor, config.loginsFile, config.antiCaptchaKey))
+    val votingHelper = VotingHelper(
+      SessionManager(config.tor, config.loginsFile, config.antiCaptchaKey, config.tempMailSoKey, config.rapidApiKey)
+    )
     try {
       votingHelper.vote(config.songId, config.comment)
     } catch {

@@ -16,6 +16,8 @@ object OptParser {
    * @param tor String
    * @param debug Boolean
    * @param antiCaptchaKey String
+   * @param tempMailSoKey String
+   * @param rapidApiKey String
    * @param homeDir String
    * @param songId Int
    * @param loginsFileOverride String
@@ -31,6 +33,8 @@ object OptParser {
     tor: String = "/usr/lib/anison-nyasher/libexec/tor",
     debug: Boolean = false,
     antiCaptchaKey: String = sys.env.getOrElse("ANTI_CAPTCHA_KEY", ""),
+    tempMailSoKey: String = sys.env.getOrElse("TEMPMAIL_SO_KEY", ""),
+    rapidApiKey: String = sys.env.getOrElse("RAPID_API_KEY", ""),
     homeDir: String = sys.env.getOrElse("HOME", ".") + "/.config/anison-nyasher",
 
     // Vote command params
@@ -72,13 +76,19 @@ object OptParser {
 
       opt[String]('t', "tor")
         .action((arg, c) => c.copy(tor = arg))
-        .text("path to tor executable"),
+        .text("path to tor executable; pass `disable` to use a direct connection"),
       opt[Boolean]('d', "debug")
         .action((arg, c) => c.copy(debug = arg))
         .text("print error backtraces"),
       opt[String]('a', "anti-captcha-key")
         .action((arg, c) => c.copy(antiCaptchaKey = arg))
         .text("anti-captcha.com API key"),
+      opt[String]('m', "temp-mail-so-key")
+        .action((arg, c) => c.copy(tempMailSoKey = arg))
+        .text("tempmail.so API key"),
+      opt[String]('r', "rapidapi-com-key")
+        .action((arg, c) => c.copy(rapidApiKey = arg))
+        .text("rapidapi.com API key"),
       opt[String]('h', "home-dir")
         .action((arg, c) => c.copy(homeDir = arg))
         .text("Nyasher configuration home directory"),

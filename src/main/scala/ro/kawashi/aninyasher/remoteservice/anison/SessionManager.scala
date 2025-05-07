@@ -6,7 +6,7 @@ import scala.util.{Failure, Random, Success, Try}
 import org.apache.logging.log4j.scala.Logging
 
 import ro.kawashi.aninyasher.captcha.{AntiCaptcha, CaptchaSolver}
-import ro.kawashi.aninyasher.email.{TemporaryInbox, TenMinuteMailNet}
+import ro.kawashi.aninyasher.email.{TemporaryInbox, TempMailSo}
 import ro.kawashi.aninyasher.loginprovider.{LegacyLoginProvider, LoginProvider}
 import ro.kawashi.aninyasher.logintransformer.LoginTransformer
 import ro.kawashi.aninyasher.logintransformer.strategy._
@@ -21,26 +21,39 @@ import ro.kawashi.aninyasher.util.PasswordGenerator
  */
 object SessionManager {
 
+  private val disableTorFlag = "disable"
+
   /**
    * Create a new session manager.
    *
    * @param torBinary String
    * @param loginsFilePath String
    * @param antiCaptchaKey String
+   * @param tempMailSoKey String
+   * @param rapidApiKey String
    * @return SessionManager
    */
-  def apply(torBinary: String, loginsFilePath: String, antiCaptchaKey: String): SessionManager = {
+  def apply(torBinary: String, loginsFilePath: String, antiCaptchaKey: String,
+            tempMailSoKey: String, rapidApiKey: String): SessionManager = {
     new SessionManager(
       BuiltInUserAgentList(),
-      TorProxyProvider(new PosixTorProcess(torBinary).start()),
+      getProxyProvider(torBinary),
       LegacyLoginProvider(loginsFilePath),
       LoginTransformer()
         .addStrategy(new ExtraSyllableStrategy)
         .addStrategy(new ExtraVowelStrategy)
         .addStrategy(new NumberAddStrategy),
       AntiCaptcha(antiCaptchaKey),
-      TenMinuteMailNet(),
+      TempMailSo(tempMailSoKey, rapidApiKey),
     )
+  }
+
+  private def getProxyProvider(torBinary: String): ProxyProvider = {
+    if (torBinary == disableTorFlag) {
+      () => None
+    } else {
+      TorProxyProvider(new PosixTorProcess(torBinary).start())
+    }
   }
 }
 
@@ -73,9 +86,7 @@ class SessionManager(userAgentList: UserAgentList,
    */
   def doAnonymously[T](withProxy: Boolean = false)(fn: Anison => T): T = {
     val userAgent = userAgentList.next()
-    // scalastyle:off null
-    val proxy = if (withProxy) proxyProvider.next() else null
-    // scalastyle:on null
+    val proxy = if (withProxy) proxyProvider.next() else None
 
     fn(Anison(userAgent, proxy))
   }
@@ -101,7 +112,7 @@ class SessionManager(userAgentList: UserAgentList,
       logger.warn("No more logins available, proceeding with registration")
       val login = loginTransformer.transform(getRegistrationSeedLogin(session))
       val password = PasswordGenerator.generate()
-      val email = temporaryInbox.create()
+      val email = temporaryInbox.create(login.toLowerCase)
 
       logger.info(s"Registering as $login ($email) with password $password")
 

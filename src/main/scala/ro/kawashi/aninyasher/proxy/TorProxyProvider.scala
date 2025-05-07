@@ -45,7 +45,7 @@ class TorProxyProvider(torProcess: => TorProcess, ipChecker: IPChecker) extends 
    *
    * @return Proxy
    */
-  override def next(): Proxy = {
+  override def next(): Option[Proxy] = {
     val oldIp = Try(ipChecker.getIPInfo.ip) match {
       case Success(ip) => ip
       case _ => "not started"
@@ -65,6 +65,6 @@ class TorProxyProvider(torProcess: => TorProcess, ipChecker: IPChecker) extends 
     }
     awaitLoop()
 
-    TorProxyProvider.torProxy
+    Some(TorProxyProvider.torProxy)
   }
 }
