@@ -24,7 +24,7 @@ object AniDb {
    */
   def apply(): AniDb = {
     new AniDb(
-      Browser(BuiltInUserAgentList().next())
+      Browser(Some(BuiltInUserAgentList().next()))
         .applyFeature(new AcceptAny)
     )
   }

@@ -17,7 +17,7 @@ class OnAirCommand extends Command with Logging {
    * @param config Config
    */
   override def run(config: Config): Unit = {
-    val songInfo = Anison(BuiltInUserAgentList().next()).getCurrentlyOnAir
+    val songInfo = Anison(Some(BuiltInUserAgentList().next())).getCurrentlyOnAir
     logger.info(s"Currently on air: ${songInfo.title} (from ${songInfo.anime})")
   }
 }

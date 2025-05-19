@@ -19,7 +19,7 @@ import ro.kawashi.aninyasher.browser.features.Feature
 object Browser {
 
   private val userAgent = s"${ro.kawashi.aninyasher.name}/${ro.kawashi.aninyasher.version}"
-  private val connectionTimeout = 10000
+  private val connectionTimeout = 60000
 
   /**
    * Create a new browser instance.
@@ -28,8 +28,8 @@ object Browser {
    * @param proxy proxy
    * @return Browser
    */
-  def apply(userAgent: String = userAgent, proxy: Option[Proxy] = None): Browser = {
-    new Browser(userAgent, proxy)
+  def apply(userAgent: Option[String] = None, proxy: Option[Proxy] = None): Browser = {
+    new Browser(userAgent.getOrElse(this.userAgent), proxy)
   }
 }
 
@@ -39,10 +39,13 @@ object Browser {
  * @param userAgent user agent
  * @param proxyOpt proxy
  * @param features a list of additional features
+ * @param connectionTimeout connection timeout
  */
 class Browser(override val userAgent: String = Browser.userAgent,
               private val proxyOpt: Option[Proxy] = None,
-              private val features: List[Feature] = Nil) extends JsoupBrowser(userAgent, proxyOpt.orNull) {
+              private val features: List[Feature] = Nil,
+              private val connectionTimeout: Int = Browser.connectionTimeout
+             ) extends JsoupBrowser(userAgent, proxyOpt.orNull) {
 
   /**
    * Add a new feature to the browser.
@@ -52,6 +55,16 @@ class Browser(override val userAgent: String = Browser.userAgent,
    */
   def applyFeature(feature: Feature): Browser = {
     new Browser(userAgent, proxyOpt, feature :: features)
+  }
+
+  /**
+   * Set connection timeout
+   *
+   * @param timeout Timeout
+   * @return Browser
+   */
+  def setTimeout(timeout: Option[Int]): Browser = {
+    new Browser(userAgent, proxyOpt, features, timeout.getOrElse(Browser.connectionTimeout))
   }
 
   /**
@@ -151,7 +164,7 @@ class Browser(override val userAgent: String = Browser.userAgent,
     super.requestSettings(conn)
 
     conn.header("Connection", "close")
-    conn.timeout(Browser.connectionTimeout)
+    conn.timeout(this.connectionTimeout)
 
     features.foldLeft(conn)((c, f) => f.modifyConnection(c))
   }

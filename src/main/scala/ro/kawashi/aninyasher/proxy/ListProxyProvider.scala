@@ -9,12 +9,14 @@ import scala.util.Random
 
 import org.apache.logging.log4j.scala.Logging
 
-import ro.kawashi.aninyasher.remoteservice.IPChecker
+import ro.kawashi.aninyasher.remoteservice.{Anison, IPChecker}
 
 /**
  * Companion object for ListProxyProvider
  */
 object ListProxyProvider {
+
+  private val anisonTimeout = 10000
 
   /**
    * Create a new instance of ListProxyProvider
@@ -52,10 +54,16 @@ class ListProxyProvider(proxyFile: String) extends ProxyProvider with Logging {
     try {
       val ipInfo = IPChecker(proxyOpt.get).getIPInfo
       logger.info(s"Using new IP address ${ipInfo.ip} from ${ipInfo.country}")
+      logger.info(s"Probing proxy ${ipInfo.ip} for Anison")
+      Anison(proxy = proxyOpt, timeout = Some(ListProxyProvider.anisonTimeout)).getVoters
+      logger.info(s"Proxy ${ipInfo.ip} is good for you!")
       proxyOpt
     } catch {
       case exc: IOException =>
         logger.warn(s"Proxy ${proxyOpt.get} is dead: ${exc.getMessage}")
+        if (!hasNext) {
+          throw new RuntimeException("No more proxies in the list")
+        }
         next()
     }
   }

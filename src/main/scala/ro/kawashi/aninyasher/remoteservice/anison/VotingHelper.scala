@@ -64,7 +64,7 @@ class VotingHelper(session: SessionManager) extends Logging {
         Nil
       }
 
-      votingLoop(statuses.reduce(_ && _))
+      votingLoop((statuses :+ true).reduce(_ && _))
     }
 
     votingLoop()

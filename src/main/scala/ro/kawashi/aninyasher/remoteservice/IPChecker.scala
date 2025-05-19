@@ -11,6 +11,7 @@ import ro.kawashi.aninyasher.browser.features.AcceptAny
 object IPChecker {
 
   private val checkerUrl = "http://ip-api.com/json"
+  private val timeout = 3000
 
   /**
    * Create IP checker instance.
@@ -18,7 +19,7 @@ object IPChecker {
    * @return IPChecker
    */
   def apply(proxy: Proxy): IPChecker = {
-    val browser = Browser(proxy = Some(proxy)).applyFeature(new AcceptAny)
+    val browser = Browser(proxy = Some(proxy)).applyFeature(new AcceptAny).setTimeout(Some(timeout))
     new IPChecker(browser)
   }
 }

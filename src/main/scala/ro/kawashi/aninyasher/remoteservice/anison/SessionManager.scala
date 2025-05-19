@@ -89,7 +89,7 @@ class SessionManager(userAgentList: UserAgentList,
     val userAgent = userAgentList.next()
     val proxy = if (withProxy) proxyProvider.next() else None
 
-    fn(Anison(userAgent, proxy))
+    fn(Anison(Some(userAgent), proxy))
   }
 
   /**
@@ -101,7 +101,7 @@ class SessionManager(userAgentList: UserAgentList,
    */
   def doAuthorized[T](fn: Anison => T): T = {
     val userAgent = userAgentList.next()
-    val session = Anison(userAgent, proxyProvider.next())
+    val session = Anison(Some(userAgent), proxyProvider.next())
     if (loginProvider.hasNext) {
       val (login, password) = loginProvider.next()
       session.login(login, password)

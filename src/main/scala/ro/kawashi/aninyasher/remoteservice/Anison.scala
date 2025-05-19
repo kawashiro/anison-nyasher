@@ -110,11 +110,13 @@ object Anison {
    *
    * @param userAgent String
    * @param proxy Proxy
+   * @param timeout Int
    * @return Anison
    */
-  def apply(userAgent: String, proxy: Option[Proxy] = None): Anison = {
+  def apply(userAgent: Option[String] = None, proxy: Option[Proxy] = None, timeout: Option[Int] = None): Anison = {
     val browser = Browser(userAgent = userAgent, proxy = proxy)
       .applyFeature(new Referer(Some(anisonBaseUrl)))
+      .setTimeout(timeout)
 
     new Anison(browser)
   }
