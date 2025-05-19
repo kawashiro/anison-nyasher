@@ -5,6 +5,7 @@ import scala.util.{Failure, Success, Try}
 import org.apache.logging.log4j.scala.Logging
 import scopt.OParser
 
+import ro.kawashi.aninyasher.net.SSLSocketFactoryProvider
 import ro.kawashi.aninyasher.OptParser.Config
 
 /**
@@ -28,6 +29,7 @@ object Application extends Logging {
           // scalastyle:on regex
         } else {
           logger.info(s"Greeting to Anison from Aninson Nyasher v.${ro.kawashi.aninyasher.version}")
+          SSLSocketFactoryProvider.register()
           Try(config.command.get.init(config).run(config)) match {
             case Failure(exception) =>
               logger.error(exception.getMessage)
