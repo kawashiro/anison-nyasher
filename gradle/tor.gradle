@@ -14,13 +14,13 @@ task buildTor(type: Exec) {
     dependsOn unarchiveTorSrc
     workingDir "${downloadTorSrc.dest}/tor-${project.findProperty('tor.version')}"
     commandLine 'sh', '-c',
-        './configure' +
+        'AUTOMAKE=automake-1.17 ACLOCAL=aclocal-1.17 LIBS="-lssl -lcrypto -lz -lzstd -ldl -lpthread" LDFLAGS="-static" ./configure' +
         ' --prefix "$PWD/../dist"' +
         ' --enable-static-tor ' +
         ' --with-libevent-dir=/usr/lib/x86_64-linux-gnu' +
         ' --with-openssl-dir=/usr/lib/x86_64-linux-gnu' +
         ' --with-zlib-dir=/usr/lib/x86_64-linux-gnu' +
         ' --disable-asciidoc' +
-        ' && make' +
+        ' && make -j8' +
         ' && make install-strip'
 }
